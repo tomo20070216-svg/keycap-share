@@ -249,12 +249,17 @@
       "phase": 2,
       "role": "executor",
       "task": "技術検証: OGP画像の仕組み(ImageResponse/Satori)で、SVGのキー図に日本語の文字を描けるかを確認し、描き方を決める",
-      "status": "todo",
+      "status": "in_progress",
       "passes": [
         "SVGの<text>で描いた場合と、SVGの図形にHTMLの文字を重ねた場合のPNGが evidence/ に保存されている",
         "どちらの描き方を採用するかの結論と理由が progress.md に記録されている"
       ],
-      "evidence": [],
+      "evidence": [
+        "evidence/p2-1/verify.mjs でImageResponse(next/og)を使い検証(evidence/p2-1/README.md)",
+        "方式A(SVGの<text>): PNGは生成されず「<text> nodes are not currently supported, please convert them to <path>」エラー。PNGの代わりにエラー文を記録した",
+        "方式B(SVGの図形+HTMLの文字を重ねる): 成功。evidence/p2-1/B-svg-plus-html.png(日本語・タップ/長押しの2段表示とも正常)。傾いたキーも evidence/p2-1/C-rotated-key.png で成功",
+        "結論: 方式Bを採用(progress.mdに記録)"
+      ],
       "dependencies": ["P2-PLACEHOLDER"]
     },
     {
