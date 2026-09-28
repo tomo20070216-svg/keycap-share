@@ -387,11 +387,16 @@
       "phase": 2,
       "role": "executor",
       "task": "同じ KeymapDiagram 部品から、OGP用のPNG(1200×630)を生成できることを確認する(本番のOGPはフェーズ4)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "画面表示と同じ部品から生成したPNGが evidence/ に保存され、日本語の文字が正しく描画されている"
       ],
-      "evidence": [],
+      "evidence": [
+        "開発用ルート /dev/og/[slug] で、Supabaseの配列を画面と同じ KeymapDiagram 部品から ImageResponse で1200×630のPNGにした",
+        "evidence/p2-8/og-orca-echo-factory-default.png、evidence/p2-8/og-orca-echo-combo-sample.png(HTTP 200・image/png・1200×630。日本語・コンボの番号が正しく描画)",
+        "開発用ページは本番(VERCEL_ENV=production)で404にする対応を追加し、本番と同じ条件のビルドで確認(evidence/p2-8/README.md)。npm test 52件成功",
+        "評価役確認: passesの条件(同じ部品から生成したPNGの保存と日本語の正しい描画)を確認した"
+      ],
       "dependencies": ["P2-7"]
     },
     {
