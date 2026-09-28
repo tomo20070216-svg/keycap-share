@@ -88,6 +88,19 @@
 
 ---
 
+## 2026-09-28 — P0-5完了: Vercelデプロイ(実行役 → 評価役)
+
+- 人間の希望により、Vercelの自動デプロイのためGitHub連携方式を選択。GitHub CLI(`gh`)がこの環境に入っていなかったため、リポジトリ作成は人間が手動で実施(`tomo20070216-svg/keycap-share`、空リポジトリ)。
+- `git remote add origin`、ブランチ名を`main`に変更し、人間の承認を得た上で`git push`(8コミット)。`.env.local`がリポジトリに含まれていないことを`git ls-files`で確認済み。
+- Vercelのインポート画面で「Optional Integrations」が出た際、既にSupabaseを手動セットアップ済みであり、新しいサービス連携は`docs/safety.md`の承認対象になりうるため、スキップを案内した。
+- 人間がVercel側で環境変数(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`)を設定してデプロイ完了。公開URL: `https://keycap-share.vercel.app/`
+- 公開URLに対して、トップページ(HTTP 200)、Supabase接続確認API(`keyIsValid:true`)、日本語OGP画像生成API(HTTP 200, 36,756 bytes)の3つをcurlで確認。ローカルと同じ結果で、本番環境でも正しく動作している。
+- `tasks.json`の`P0-5`を`done`に更新。これでフェーズ0のP0-1〜P0-5がすべて完了し、`P1-PLACEHOLDER`(フェーズ1の詳細タスク追加)に着手可能になった。
+
+**学び**: Vercelのプロジェクトインポート画面に出る「Optional Integrations」は、既存の手動セットアップと重複・競合しうるため、既に自前で設定済みのサービスがある場合はスキップするのが安全。
+
+---
+
 ## 2026-09-28 — P0-0 完了: 残りの回答(計画役 → 評価役)
 
 - 人間の回答:

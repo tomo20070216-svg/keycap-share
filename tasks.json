@@ -99,11 +99,18 @@
       "phase": 0,
       "role": "executor",
       "task": "Vercelにデプロイできる状態にする(人間の承認を得て本番/プレビューデプロイ)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "空のページが公開URLで表示される(evals/acceptance.mdのフェーズ0基準を満たす)"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間がGitHubリポジトリ(tomo20070216-svg/keycap-share)を作成。人間の承認を得てgit push(8コミット、mainブランチ)",
+        ".env.localがgit ls-filesに含まれない(コミットされていない)ことを確認",
+        "人間がVercelでGitHubリポジトリをインポートし、環境変数(NEXT_PUBLIC_SUPABASE_URL/ANON_KEY)を設定してデプロイ。Optional Integrationsは追加のサービス連携になるため、人間の承認なしに追加しない方針でスキップを案内",
+        "公開URL https://keycap-share.vercel.app/ にcurlでアクセスしHTTP 200を確認",
+        "本番環境でSupabase接続(/api/supabase-test: keyIsValid:true)とOGP画像生成(/api/og-test: HTTP 200, 36,756 bytes, image/png)も併せて確認。ローカルと同じ結果",
+        "評価役確認: 上記3つのエンドポイントのレスポンスを実行結果で確認した"
+      ],
       "dependencies": ["P0-3"]
     },
     {
