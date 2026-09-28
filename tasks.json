@@ -54,12 +54,18 @@
       "phase": 0,
       "role": "executor",
       "task": "Next.js(App Router) + TypeScript + Tailwindのプロジェクトを作成する",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "npm run dev でローカル起動できる",
         "npm run build が成功する"
       ],
-      "evidence": [],
+      "evidence": [
+        "create-next-app@16.3.6でscaffold(TypeScript, Tailwind, App Router, src/, ESLint)。日本語フォルダ名はnpmパッケージ名に使えないため、一時フォルダでkeycap-shareとして生成後にプロジェクトフォルダへ移動",
+        "npm run build が成功(Compiled successfully、静的ページ生成まで完了)",
+        "npm run dev 起動後、curl http://localhost:3000 でHTTP 200を確認。確認後にプロセスを停止",
+        "git status で.gitignoreによりnode_modules/.nextが除外されていることを確認してからコミット(b5fe7b8)",
+        "評価役確認: 上記2条件(npm run dev起動・npm run build成功)を実行ログで確認した"
+      ],
       "dependencies": ["P0-1"]
     },
     {

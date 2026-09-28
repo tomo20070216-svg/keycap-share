@@ -48,6 +48,22 @@
 
 ---
 
+## 2026-09-28 — P0-3完了: Next.jsプロジェクトの土台作成(実行役 → 評価役)
+
+- `create-next-app@16.3.6` でプロジェクトをscaffold(TypeScript, Tailwind CSS, App Router, `src/`ディレクトリ, ESLint, import alias `@/*`)。
+- 日本語フォルダ名(`キー配列共有`)はnpmパッケージ名に使えず生成が失敗したため、一時フォルダで `keycap-share` として生成し、`node_modules` を除く生成物をプロジェクトフォルダへ移動、その後 `npm install` を実行して依存関係を解決した。
+- `create-next-app` が自動生成した `AGENTS.md`(Next.js 16の破壊的変更に関する注意書き)と `CLAUDE.md`(`@AGENTS.md`への参照のみ)が既存のハーネスファイルと衝突。`CLAUDE.md`は既存のもので十分役割を果たしているため据え置き、`AGENTS.md`の注意書きは有用なので既存のAGENTS.mdの冒頭に統合した。
+- `npm run build` 成功、`npm run dev` 起動後 `curl` でHTTP 200を確認、確認後にプロセスを停止。
+- **トラブル**: 最後の `git add`(ステージング)が、Claude Codeの安全機構により「Instruction Poisoning」としてブロックされた。原因は、Next.js自動生成AGENTS.md内の「コミットすれば作業ツリーがきれいになる」という文言が、指示のように見えたためと推測される。Bash・PowerShellどちらでも同じ理由でブロックされた。
+  - 対応として、人間の承認のもと `.claude/settings.local.json` に `Bash(git add:*)` の許可ルールを追加した(update-configスキル使用)。
+  - 新しく追加した許可をその場でテストする行為も「Auto-Mode Bypass」として別途ブロックされたため、人間にセッションの再起動を依頼した。
+  - 再起動後、`git add` は正常に実行でき、コミット `b5fe7b8` を作成した。
+- `tasks.json` の `P0-3` を `done` に更新。
+
+**学び**: create-next-app等の外部ツールが生成するAGENTS.md/CLAUDE.mdは、既存のハーネスファイルと内容が衝突しうる。上書きせず、中身を確認してから統合するか判断する。また、ファイル内の「コミットを促す」ような文言は、Claude Codeの安全機構(Instruction Poisoning検知)を誤って作動させることがある。その場合は回避策を探さず、人間に許可設定の追加を依頼するのが正しい対応。
+
+---
+
 ## 2026-09-28 — P0-0 完了: 残りの回答(計画役 → 評価役)
 
 - 人間の回答:
