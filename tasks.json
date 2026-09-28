@@ -1,0 +1,144 @@
+{
+  "_readme": "このファイルは作業の正本です。AIはタスクの削除、passes(合格条件)の削除・弱体化を行ってはいけません(docs/safety.md参照)。新しいタスクの追加や、statusの更新は可。評価役だけがstatusをdoneにできます。",
+  "_status_values": ["todo", "in_progress", "blocked", "done"],
+  "_role_values": ["planner", "executor", "reviewer"],
+  "tasks": [
+    {
+      "id": "P0-0",
+      "phase": 0,
+      "role": "planner",
+      "task": "未確定事項を人間に質問する: (1) Orca echoの実機キー数・物理配置の情報は入手できるか / (2) Xログイン認証を採用したいか、それとも編集用秘密キー付きURL案でよいか / (3) VercelとSupabaseは無料枠内で運用したいか、上限を超えたらどうするか",
+      "status": "todo",
+      "passes": [
+        "3つの質問すべてについて、人間からの回答がprogress.mdに記録されている"
+      ],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "P0-1",
+      "phase": 0,
+      "role": "executor",
+      "task": "現在の git リポジトリ構成(ホームフォルダがルートになっている問題)について、人間に対応方針を確認する。対応案: (a) このプロジェクトフォルダ内で新規に git init して独立リポジトリにする, (b) 現状のまま使う, (c) その他",
+      "status": "todo",
+      "passes": [
+        "対応方針が人間から明示され、progress.mdに記録されている",
+        "方針(a)を選んだ場合、新しい独立リポジトリが作成され、無関係なファイルが含まれていないことをgit statusで確認できる"
+      ],
+      "evidence": [],
+      "dependencies": []
+    },
+    {
+      "id": "P0-2",
+      "phase": 0,
+      "role": "executor",
+      "task": "ImageResponseで日本語フォントが正しく表示できるかを小さく検証する(実装前検証)",
+      "status": "todo",
+      "passes": [
+        "日本語を含むテスト画像が生成され、文字化けなく表示されているスクリーンショットまたは画像ファイルがevidenceにある"
+      ],
+      "evidence": [],
+      "dependencies": ["P0-1"]
+    },
+    {
+      "id": "P0-3",
+      "phase": 0,
+      "role": "executor",
+      "task": "Next.js(App Router) + TypeScript + Tailwindのプロジェクトを作成する",
+      "status": "todo",
+      "passes": [
+        "npm run dev でローカル起動できる",
+        "npm run build が成功する"
+      ],
+      "evidence": [],
+      "dependencies": ["P0-1"]
+    },
+    {
+      "id": "P0-4",
+      "phase": 0,
+      "role": "executor",
+      "task": "Supabaseプロジェクトに接続できる状態にする(環境変数経由)",
+      "status": "todo",
+      "passes": [
+        "ローカル環境からSupabaseへの接続確認ができるテストコードまたはログがある",
+        "秘密鍵が.env.localにあり、.gitignoreで除外されていることを確認できる"
+      ],
+      "evidence": [],
+      "dependencies": ["P0-3"]
+    },
+    {
+      "id": "P0-5",
+      "phase": 0,
+      "role": "executor",
+      "task": "Vercelにデプロイできる状態にする(人間の承認を得て本番/プレビューデプロイ)",
+      "status": "todo",
+      "passes": [
+        "空のページが公開URLで表示される(evals/acceptance.mdのフェーズ0基準を満たす)"
+      ],
+      "evidence": [],
+      "dependencies": ["P0-3"]
+    },
+    {
+      "id": "P1-PLACEHOLDER",
+      "phase": 1,
+      "role": "planner",
+      "task": "フェーズ0完了後、計画役がフェーズ1(データ設計)の詳細タスクをここに追加する。先の工程を今から詳細化しすぎない(仕様変更で無駄になるため)。",
+      "status": "todo",
+      "passes": [
+        "フェーズ1の詳細タスクが本ファイルに追加され、それぞれにpassesが定義されている"
+      ],
+      "evidence": [],
+      "dependencies": ["P0-1", "P0-2", "P0-3", "P0-4", "P0-5"]
+    },
+    {
+      "id": "P2-PLACEHOLDER",
+      "phase": 2,
+      "role": "planner",
+      "task": "フェーズ1完了後、計画役がフェーズ2(キー図描画)の詳細タスクを追加する",
+      "status": "todo",
+      "passes": ["フェーズ2の詳細タスクが本ファイルに追加されている"],
+      "evidence": [],
+      "dependencies": ["P1-PLACEHOLDER"]
+    },
+    {
+      "id": "P3-PLACEHOLDER",
+      "phase": 3,
+      "role": "planner",
+      "task": "フェーズ2完了後、計画役がフェーズ3(閲覧ページ)の詳細タスクを追加する",
+      "status": "todo",
+      "passes": ["フェーズ3の詳細タスクが本ファイルに追加されている"],
+      "evidence": [],
+      "dependencies": ["P2-PLACEHOLDER"]
+    },
+    {
+      "id": "P4-PLACEHOLDER",
+      "phase": 4,
+      "role": "planner",
+      "task": "フェーズ3完了後、計画役がフェーズ4(OGP画像と共有・最重要)の詳細タスクを追加する",
+      "status": "todo",
+      "passes": ["フェーズ4の詳細タスクが本ファイルに追加されている"],
+      "evidence": [],
+      "dependencies": ["P3-PLACEHOLDER"]
+    },
+    {
+      "id": "P5-PLACEHOLDER",
+      "phase": 5,
+      "role": "planner",
+      "task": "フェーズ4完了後、計画役がフェーズ5(投稿エディタ)の詳細タスクを追加する",
+      "status": "todo",
+      "passes": ["フェーズ5の詳細タスクが本ファイルに追加されている"],
+      "evidence": [],
+      "dependencies": ["P4-PLACEHOLDER"]
+    },
+    {
+      "id": "P6-PLACEHOLDER",
+      "phase": 6,
+      "role": "planner",
+      "task": "フェーズ5完了後、計画役がフェーズ6(認証と運用)の詳細タスクを追加する",
+      "status": "todo",
+      "passes": ["フェーズ6の詳細タスクが本ファイルに追加されている"],
+      "evidence": [],
+      "dependencies": ["P5-PLACEHOLDER"]
+    }
+  ]
+}

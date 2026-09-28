@@ -1,0 +1,14 @@
+# 依存関係・ビルド成果物(フェーズ0でNext.jsプロジェクトを作成後に有効化)
+node_modules/
+.next/
+out/
+build/
+
+# 環境変数・秘密情報
+.env
+.env.local
+.env.*.local
+
+# OS・エディタ
+.DS_Store
+Thumbs.db
