@@ -188,7 +188,8 @@
         "src/keyboards/orca-echo.tsを作成。冒頭に「仮の値。実機または公式情報で確認後に差し替える。」と明記",
         "src/keyboards/__tests__/orca-echo.test.tsを作成し、Vitestで8件のテストすべて成功(Zod検証、isProvisional、キー数49、ダイヤル/トラックボール/スクロールパッドの数と位置、id重複なし、ELEMENT_ACTIONS定義、トラックボール4方向action)",
         "人間からの追加情報(トラックボールはレイヤー切り替え中に上下左右へ操作を割り当てられる)を反映し、Action型にleft/rightを追加、ELEMENT_ACTIONS.trackballを更新",
-        "評価役確認: npm testの実行結果(8 passed)を確認した"
+        "追加で src/keyboards/orca-echo-factory-default.ts を作成(工場出荷時配列の実データ、3レイヤー63割り当て)。src/lib/layout-validation.ts で物理レイアウトとの整合性検証関数を追加",
+        "評価役確認: npm testの実行結果(12 passed、物理レイアウトとの矛盾チェック含む)を確認した"
       ],
       "dependencies": ["P1-1"]
     },
