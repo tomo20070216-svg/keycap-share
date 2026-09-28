@@ -288,12 +288,18 @@
       "phase": 2,
       "role": "executor",
       "task": "キー図の部品 KeymapDiagram を作る(サーバーとブラウザの両方で動く形。状態を持たず、Tailwindを使わない)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "npx tsc --noEmit と npm test が成功する",
         "タップは大きく、長押しは下に小さく、割り当てなしは空欄+薄い灰色で描かれる(スクリーンショットで確認)"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/components/KeymapDiagram.tsx(共用のキー図の部品)、src/components/ResponsiveKeymap.tsx(画面幅に合わせて縮小するブラウザ用の包み)、src/lib/label-fit.ts(文字サイズの自動調整と2行分け)、確認ページ /dev/keymap を作成",
+        "npx tsc --noEmit 成功、npm test 36件成功、eslint 成功、npm run build 成功",
+        "スクリーンショット: evidence/p2-3/dev-keymap-desktop.png(幅1100px)、evidence/p2-3/dev-keymap-mobile.png(幅390px)。タップ大・長押し小(A/Ctrl、変換/Shift)、割り当てなしは空欄+薄い灰色を確認(evidence/p2-3/README.md)",
+        "参考: 同じ部品をOGPの仕組みに通した画像 evidence/p2-3/og-preview-fn2.png。途中で見つかったOGP側の問題2件(undefinedの値、フラグメントの並び)は修正済み",
+        "評価役確認: passes 2条件を上記の実行結果とスクリーンショットで確認した"
+      ],
       "dependencies": ["P2-2"]
     },
     {
