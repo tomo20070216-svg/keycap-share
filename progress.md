@@ -76,6 +76,18 @@
 
 ---
 
+## 2026-09-28 — P0-4完了: Supabase接続(実行役 → 評価役)
+
+- 人間が新規にSupabaseアカウント・プロジェクトを作成(Free plan)。`.env.local`にProject URLとPublishable key(旧称anon public key)を設定。値はAIに見せず、本人が入力。
+- AIは値の中身を読まず、`node -e`でキーのプレフィックス(`sb_publishab...`)と長さのみを確認して形式チェックを行った。
+- `@supabase/supabase-js`をインストール。`src/lib/supabase.ts`にクライアント初期化コードを作成。
+- 接続確認用API `src/app/api/supabase-test/route.ts` を作成。**つまずいた点**: `/rest/v1/`(ルート)への問い合わせが401(`Secret API key required`)を返した。これはキーが無効なのではなく、Supabaseの新しいAPIキー体系(publishable/secret)ではルート(スキーマ全体のOpenAPI仕様)へのアクセスがSecret key専用に変更されたための仕様通りの挙動。存在しないテーブル名への問い合わせに切り替えたところ、404 + `PGRST205`(テーブルが見つからない)が返り、キー自体は有効であることを確認できた。
+- `tasks.json`の`P0-4`を`done`に更新。
+
+**学び**: Supabaseの新しいAPIキー体系(2024年以降のプロジェクト)では、Publishable keyでの動作確認は「ルート疎通」ではなく「存在しないテーブルへの問い合わせで404+PGRST205が返るか」で行うのが正しい。401(Secret API key required)が出ても、即座にキーが無効と判断しない。
+
+---
+
 ## 2026-09-28 — P0-0 完了: 残りの回答(計画役 → 評価役)
 
 - 人間の回答:

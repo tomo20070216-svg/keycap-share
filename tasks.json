@@ -79,12 +79,19 @@
       "phase": 0,
       "role": "executor",
       "task": "Supabaseプロジェクトに接続できる状態にする(環境変数経由)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "ローカル環境からSupabaseへの接続確認ができるテストコードまたはログがある",
         "秘密鍵が.env.localにあり、.gitignoreで除外されていることを確認できる"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間がSupabaseで新規プロジェクトを作成し、.env.localにNEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY(Publishable key)を設定(値はAIに見せず本人が入力)",
+        "@supabase/supabase-jsをインストール、src/lib/supabase.tsにクライアント初期化コードを作成",
+        "src/app/api/supabase-test/route.tsで接続確認: 存在しないテーブル名への問い合わせで404+PGRST205(テーブルが見つからない、キーは有効)を確認。npm run dev起動中にcurlでkeyIsValid:trueを確認",
+        "調査で判明: Supabaseの新しいキー体系では/rest/v1/ルートへのアクセスはSecret key専用になっており、Publishable keyでは401(Secret API key required)になる。これは仕様通りで異常ではない。テストルートはこれを踏まえた判定方法に修正済み",
+        ".env.localは.gitignoreで除外されていることを確認(git status --shortに現れない)。.env.local.exampleのみコミット対象",
+        "評価役確認: keyIsValid:trueのレスポンスと.gitignoreの設定を確認した"
+      ],
       "dependencies": ["P0-3"]
     },
     {
