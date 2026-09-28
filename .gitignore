@@ -3,6 +3,7 @@ node_modules/
 .next/
 out/
 build/
+*.tsbuildinfo
 
 # 環境変数・秘密情報
 .env

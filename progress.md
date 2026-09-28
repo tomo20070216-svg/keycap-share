@@ -140,6 +140,22 @@
 
 ---
 
+## 2026-09-28 — P1-1・P1-2完了: データモデル設計とOrca echo仮データ(計画役/実行役 → 評価役)
+
+- フェーズ1着手前に、CLAUDE.mdのルールに従いデータモデルの計画(「要素(element)」という概念でキー/ダイヤル/スクロールパッド/トラックボールを統一的に扱う案)を人間に提示し、承認を得た。
+- 承認時に人間から追加情報: キー要素は`press`(タップ)だけでなく`hold`(長押し)も設定できる。→ Action型に反映。
+- `src/lib/schemas.ts`を作成。ElementType/Action/KeyboardElement/KeyboardPhysicalLayout/Layer/Assignment/LayoutInput/Layoutの各Zodスキーマを定義。
+- `src/keyboards/orca-echo.ts`を作成。`docs/keyboards/orca-echo.md`の表(左25+右24キー、ダイヤル、トラックボール、スクロールパッド2つ)をもとに、座標を機械的にグリッド割り当てした仮データ。ファイル冒頭に「仮の値」と明記(`plan.md`2章方針5)。
+- 作業途中で人間から追加情報: トラックボールは通常のポインタ操作に加え、**レイヤー切り替え中は上下左右への操作(スワイプ)にコピーや文字入力などの機能を割り当てられる**。→ Action型に`left`/`right`を追加、`ELEMENT_ACTIONS.trackball`を`["up","down","left","right","click"]`に更新。`docs/keyboards/orca-echo.md`にも反映。
+- Vitestを導入(`plan.md`3章のテスト方針)。`@types/node`をNode 24系に合わせて更新(vitestのpeer dependency競合を解消)。`vitest.config.ts`で`@/`エイリアスを解決。
+- `src/keyboards/__tests__/orca-echo.test.ts`を作成し8件のテストが全て成功(Zod検証、49キー、ダイヤル/トラックボール/スクロールパッドの数と位置、id重複なし、action定義、トラックボール4方向)。
+- `npx tsc --noEmit`・`npm run build`とも成功を確認。
+- `tasks.json`を更新: `P1-PLACEHOLDER`を`P1-1`(スキーマ)`P1-2`(Orca echoデータ、完了)`P1-3`(Supabaseテーブル作成、人間の承認が必要)`P1-4`(保存・取得確認)に分解。
+
+**学び**: 実機の仕様(今回はトラックボールのジェスチャー機能)は、データ設計を進めている最中にも新しい情報が出てくることがある。型定義を「要素+操作」のように抽象化しておいたおかげで、新しい操作(left/right)の追加が既存構造を壊さずにできた。抽象化の効果を確認できた例。
+
+---
+
 ## 2026-09-28 — P0-0 完了: 残りの回答(計画役 → 評価役)
 
 - 人間の回答:

@@ -156,16 +156,66 @@
       "dependencies": []
     },
     {
-      "id": "P1-PLACEHOLDER",
+      "id": "P1-1",
       "phase": 1,
-      "role": "planner",
-      "task": "フェーズ0完了後、計画役がフェーズ1(データ設計)の詳細タスクをここに追加する。先の工程を今から詳細化しすぎない(仕様変更で無駄になるため)。",
+      "role": "executor",
+      "task": "Zodスキーマを定義する: 入力要素(key/dial/scrollpad/trackball)、物理レイアウト、レイヤー、割り当て、配列(layout)入力/出力の型",
+      "status": "done",
+      "passes": [
+        "src/lib/schemas.tsが作成され、npx tsc --noEmitでエラーが出ない",
+        "各要素タイプ(key/dial/scrollpad/trackball)に対応するaction一覧が定義されている"
+      ],
+      "evidence": [
+        "src/lib/schemas.tsを作成。ElementType(key/dial/scrollpad/trackball)、Action(press/hold/cw/ccw/up/down/left/right/tap/click)、KeyboardElement、KeyboardPhysicalLayout、Layer、Assignment、LayoutInput/Layoutスキーマを定義",
+        "npx tsc --noEmitでエラーなしを確認",
+        "npm run buildが成功することを確認",
+        "評価役確認: 型定義とビルド結果を確認した"
+      ],
+      "dependencies": ["P0-1", "P0-2", "P0-3", "P0-4", "P0-5"]
+    },
+    {
+      "id": "P1-2",
+      "phase": 1,
+      "role": "executor",
+      "task": "Orca echoの仮の物理レイアウトデータを作成する(docs/keyboards/orca-echo.mdに基づく、座標は仮の値と明記)",
+      "status": "done",
+      "passes": [
+        "src/keyboards/orca-echo.tsが作成され、ファイル冒頭に「仮の値」と明記されている",
+        "KeyboardPhysicalLayoutSchemaの検証を通る",
+        "キー要素が左25+右24=49個、ダイヤル1個(左)、トラックボール1個(右)、スクロールパッド2個(左右1個ずつ)であることがテストで確認されている"
+      ],
+      "evidence": [
+        "src/keyboards/orca-echo.tsを作成。冒頭に「仮の値。実機または公式情報で確認後に差し替える。」と明記",
+        "src/keyboards/__tests__/orca-echo.test.tsを作成し、Vitestで8件のテストすべて成功(Zod検証、isProvisional、キー数49、ダイヤル/トラックボール/スクロールパッドの数と位置、id重複なし、ELEMENT_ACTIONS定義、トラックボール4方向action)",
+        "人間からの追加情報(トラックボールはレイヤー切り替え中に上下左右へ操作を割り当てられる)を反映し、Action型にleft/rightを追加、ELEMENT_ACTIONS.trackballを更新",
+        "評価役確認: npm testの実行結果(8 passed)を確認した"
+      ],
+      "dependencies": ["P1-1"]
+    },
+    {
+      "id": "P1-3",
+      "phase": 1,
+      "role": "executor",
+      "task": "Supabaseにkeyboards/layouts/layers/assignments/tags/layout_tagsテーブルを作成する(マイグレーション適用。docs/safety.mdにより人間の承認が必要)",
       "status": "todo",
       "passes": [
-        "フェーズ1の詳細タスクが本ファイルに追加され、それぞれにpassesが定義されている"
+        "テーブル定義(SQL)が作成され、人間の承認を得てSupabaseに適用されている",
+        "編集用秘密キーは平文で保存せず、ハッシュ化して保存する設計になっている"
       ],
       "evidence": [],
-      "dependencies": ["P0-1", "P0-2", "P0-3", "P0-4", "P0-5"]
+      "dependencies": ["P1-2"]
+    },
+    {
+      "id": "P1-4",
+      "phase": 1,
+      "role": "executor",
+      "task": "仮のOrca echoデータを使い、配列(layout)を1件保存し、取得できることを確認する(フェーズ1の完了の目安)",
+      "status": "todo",
+      "passes": [
+        "仮の配列データをSupabaseに保存し、APIまたはテストコードで取得できることを確認した証拠がある"
+      ],
+      "evidence": [],
+      "dependencies": ["P1-3"]
     },
     {
       "id": "P2-PLACEHOLDER",
@@ -175,7 +225,7 @@
       "status": "todo",
       "passes": ["フェーズ2の詳細タスクが本ファイルに追加されている"],
       "evidence": [],
-      "dependencies": ["P1-PLACEHOLDER"]
+      "dependencies": ["P1-4"]
     },
     {
       "id": "P3-PLACEHOLDER",
