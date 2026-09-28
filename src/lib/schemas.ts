@@ -24,7 +24,7 @@ export type Side = z.infer<typeof SideSchema>;
  * - scrollpad: up / down / tap
  * - trackball: 通常のポインタ操作(カーソル移動)に加え、レイヤー切り替え中は
  *   上下左右への操作(スワイプ)に別の機能(コピー、文字入力など)を割り当てられる。
- *   up/down/left/right の4方向 + click(仮。押し込みがあるかは未確認)。
+ *   up/down/left/right の4方向。押し込み(クリック)はない(人間の確認、2026-09-29)。
  *   通常のカーソル移動自体は割り当ての対象にしない(常にポインタとして機能するため)。
  */
 export const ActionSchema = z.enum([
@@ -37,7 +37,6 @@ export const ActionSchema = z.enum([
   "left",
   "right",
   "tap",
-  "click",
 ]);
 export type Action = z.infer<typeof ActionSchema>;
 
@@ -45,7 +44,7 @@ export const ELEMENT_ACTIONS: Record<ElementType, Action[]> = {
   key: ["press", "hold"],
   dial: ["cw", "ccw"],
   scrollpad: ["up", "down", "tap"],
-  trackball: ["up", "down", "left", "right", "click"],
+  trackball: ["up", "down", "left", "right"],
 };
 
 export const KeyboardElementSchema = z.object({

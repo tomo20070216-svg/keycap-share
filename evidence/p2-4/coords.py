@@ -53,3 +53,15 @@ for k, (cx, cy) in fitted.items():
     w, h = size.get(k, (1, 1))
     out[k] = dict(x=r(cx / U2 - w / 2 - ox), y=r(cy / U2 - h / 2 - oy), width=w, height=h, rotation=rot.get(k, 0))
 print(json.dumps(out))
+
+# ---- 左右の高さをそろえる(人間の指摘、2026-09-29) ----
+# 写真では右手が少し上に写っているが、これは写真の配置のずれで、実物では左右の高さはそろっている。
+# 左右で対応する列(左の列c ↔ 右の列6-c)の差の平均だけ、右手の要素すべてを下げる。
+pairs = [(f"L-{r}-{c}", f"R-{r}-{6 - c}") for r in range(4) for c in range(6)]
+pairs = [(a, b) for a, b in pairs if a in out and b in out and a != "L-3-5"]
+dy = r(sum(out[a]["y"] - out[b]["y"] for a, b in pairs) / len(pairs))
+for k in out:
+    if k.startswith("R-"):
+        out[k]["y"] = r(out[k]["y"] + dy)
+print(f"右手を下げた量 dy={dy}", file=__import__("sys").stderr)
+print(json.dumps(out))

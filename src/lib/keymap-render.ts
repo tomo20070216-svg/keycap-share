@@ -48,6 +48,25 @@ export type KeymapRenderModel = {
   /** 左右それぞれの範囲(キー単位)。左右の隙間の確認や、見出しの配置に使う */
   halves: Record<Side, { x: number; width: number }>;
   items: RenderItem[];
+  /** 要素の外側に置く文字(ダイヤル・トラックボールの操作) */
+  outsideLabels: OutsideLabel[];
+};
+
+/**
+ * 要素の外側に置く文字の枠(キー単位)。
+ * - ダイヤル: 右外に「右回し」(cw)と「左回し」(ccw)を縦に並べる
+ * - トラックボール: 上下左右の操作を、円の上下左右の外側に置く
+ * スクロールパッドは縦長で中に余裕があるため、中に上から ↑・タップ・↓ の順で置く(描画側)。
+ */
+export type OutsideLabel = {
+  elementId: string;
+  action: Action;
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  align: "left" | "center" | "right";
 };
 
 export type KeymapRenderOptions = {
@@ -132,15 +151,54 @@ export function buildKeymapRenderModel(
     };
   });
 
-  const maxY = Math.max(...boxes.map((b) => b.box.maxY));
+  const outsideLabels = items.flatMap(buildOutsideLabels);
+
+  // 外側の文字が図の範囲からはみ出す場合は、図を広げる(左上がはみ出す場合は全体をずらす)
+  const itemBoxes = items.map(boundingBox);
+  const allMinX = Math.min(0, ...outsideLabels.map((l) => l.x));
+  const allMinY = Math.min(0, ...outsideLabels.map((l) => l.y));
+  const allMaxX = Math.max(...itemBoxes.map((b) => b.maxX), ...outsideLabels.map((l) => l.x + l.width));
+  const allMaxY = Math.max(...itemBoxes.map((b) => b.maxY), ...outsideLabels.map((l) => l.y + l.height));
+  const shift = <T extends { x: number; y: number }>(v: T): T => ({ ...v, x: v.x - allMinX, y: v.y - allMinY });
 
   return {
-    width: leftWidth + splitGap + rightWidth,
-    height: maxY - minY,
+    width: allMaxX - allMinX,
+    height: allMaxY - allMinY,
     halves: {
-      left: { x: 0, width: leftWidth },
-      right: { x: leftWidth + splitGap, width: rightWidth },
+      left: { x: -allMinX, width: leftWidth },
+      right: { x: leftWidth + splitGap - allMinX, width: rightWidth },
     },
-    items,
+    items: items.map(shift),
+    outsideLabels: outsideLabels.map(shift),
   };
+}
+
+/**
+ * 文字の枠の大きさは、Orca echo の左右の間(ダイヤルとトラックボールの間は約1.9キー分)に
+ * 両方の文字が並んでも重ならないように決めている。重ならないことはテストで確認する。
+ */
+function buildOutsideLabels(item: RenderItem): OutsideLabel[] {
+  const b = boundingBox(item);
+  const cx = (b.minX + b.maxX) / 2;
+  const cy = (b.minY + b.maxY) / 2;
+  const label = (action: Action, rect: Omit<OutsideLabel, "elementId" | "action" | "text">): OutsideLabel[] => {
+    const found = item.extras.find((e) => e.action === action);
+    return found ? [{ elementId: item.elementId, action, text: found.text, ...rect }] : [];
+  };
+
+  if (item.type === "dial") {
+    return [
+      ...label("cw", { x: b.maxX + 0.06, y: cy - 0.48, width: 0.85, height: 0.46, align: "left" }),
+      ...label("ccw", { x: b.maxX + 0.06, y: cy + 0.02, width: 0.85, height: 0.46, align: "left" }),
+    ];
+  }
+  if (item.type === "trackball") {
+    return [
+      ...label("up", { x: cx - 0.6, y: b.minY - 0.3, width: 1.2, height: 0.26, align: "center" }),
+      ...label("down", { x: cx - 0.6, y: b.maxY + 0.04, width: 1.2, height: 0.3, align: "center" }),
+      ...label("left", { x: b.minX - 0.86, y: cy - 0.2, width: 0.8, height: 0.4, align: "right" }),
+      ...label("right", { x: b.maxX + 0.04, y: cy - 0.2, width: 0.5, height: 0.4, align: "left" }),
+    ];
+  }
+  return [];
 }

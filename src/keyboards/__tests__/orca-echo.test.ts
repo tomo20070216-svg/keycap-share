@@ -52,4 +52,23 @@ describe("orcaEcho 仮の物理レイアウト", () => {
       expect.arrayContaining(["up", "down", "left", "right"])
     );
   });
+
+  it("トラックボールに押し込み(クリック)はない(人間の確認、2026-09-29)", () => {
+    expect(ELEMENT_ACTIONS.trackball).toEqual(["up", "down", "left", "right"]);
+  });
+
+  it("左右の対応する列(左の列c ↔ 右の列6-c)の高さがそろっている", () => {
+    const y = (id: string) => orcaEcho.elements.find((e) => e.id === id)!.y;
+    const diffs: number[] = [];
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 6; col++) {
+        const left = `L-${row}-${col}`;
+        const right = `R-${row}-${6 - col}`;
+        if (left === "L-3-5" || !orcaEcho.elements.some((e) => e.id === left) || !orcaEcho.elements.some((e) => e.id === right)) continue;
+        diffs.push(y(left) - y(right));
+      }
+    }
+    const mean = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    expect(Math.abs(mean)).toBeLessThan(0.05);
+  });
 });

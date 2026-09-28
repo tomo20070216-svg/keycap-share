@@ -10,6 +10,8 @@
  * 読み取り誤差をならすため、通常のキーは「キーの間隔は全体で共通、列ごとに段のずれだけが違う」
  * という規則に最小二乗法で当てはめた(横の間隔 約66.6px を1キー分とした。縦は約65.8px)。
  * 親指キー(約18度)とダイヤル(約22度)の傾き、トラックボール・スクロールパッドは読み取った値のまま。
+ * 写真では右手が少し上に写っているが実物では左右の高さはそろっている(人間の確認)ため、
+ * 右手の要素すべてを左右の差の平均(0.1キー分)だけ下げた。
  * 写真の遠近感による誤差があり、人間が実機と見比べて確認するまでは「仮の値」として扱う。
  * 実機または公式情報で確認でき次第、このファイルだけを差し替えれば良いように設計している
  * (plan.md 2章 方針5)。
@@ -59,34 +61,34 @@ export const orcaEcho: KeyboardPhysicalLayout = {
 
     // ===== 右手 =====
     // 段1(内側列にスクロールパッド)
-    { id: "R-SCROLL", type: "scrollpad", side: "right", x: 7.35, y: 0.2, width: 1.15, height: 2.05, rotation: 0, legend: "スクロールパッド" },
-    { id: "R-0-1", type: "key", side: "right", x: 8.55, y: 0.25, width: 1, height: 1, rotation: 0, legend: "Y" },
-    { id: "R-0-2", type: "key", side: "right", x: 9.55, y: 0.15, width: 1, height: 1, rotation: 0, legend: "U" },
-    { id: "R-0-3", type: "key", side: "right", x: 10.55, y: 0, width: 1, height: 1, rotation: 0, legend: "I" },
-    { id: "R-0-4", type: "key", side: "right", x: 11.55, y: 0.15, width: 1, height: 1, rotation: 0, legend: "O" },
-    { id: "R-0-5", type: "key", side: "right", x: 12.55, y: 0.35, width: 1, height: 1, rotation: 0, legend: "P" },
-    { id: "R-0-6", type: "key", side: "right", x: 13.55, y: 0.35, width: 1, height: 1, rotation: 0, legend: "-" },
+    { id: "R-SCROLL", type: "scrollpad", side: "right", x: 7.35, y: 0.3, width: 1.15, height: 2.05, rotation: 0, legend: "スクロールパッド" },
+    { id: "R-0-1", type: "key", side: "right", x: 8.55, y: 0.35, width: 1, height: 1, rotation: 0, legend: "Y" },
+    { id: "R-0-2", type: "key", side: "right", x: 9.55, y: 0.25, width: 1, height: 1, rotation: 0, legend: "U" },
+    { id: "R-0-3", type: "key", side: "right", x: 10.55, y: 0.1, width: 1, height: 1, rotation: 0, legend: "I" },
+    { id: "R-0-4", type: "key", side: "right", x: 11.55, y: 0.25, width: 1, height: 1, rotation: 0, legend: "O" },
+    { id: "R-0-5", type: "key", side: "right", x: 12.55, y: 0.45, width: 1, height: 1, rotation: 0, legend: "P" },
+    { id: "R-0-6", type: "key", side: "right", x: 13.55, y: 0.45, width: 1, height: 1, rotation: 0, legend: "-" },
     // 段2
-    { id: "R-1-1", type: "key", side: "right", x: 8.55, y: 1.25, width: 1, height: 1, rotation: 0, legend: "H" },
-    { id: "R-1-2", type: "key", side: "right", x: 9.55, y: 1.15, width: 1, height: 1, rotation: 0, legend: "J" },
-    { id: "R-1-3", type: "key", side: "right", x: 10.55, y: 1, width: 1, height: 1, rotation: 0, legend: "K" },
-    { id: "R-1-4", type: "key", side: "right", x: 11.55, y: 1.15, width: 1, height: 1, rotation: 0, legend: "L" },
-    { id: "R-1-5", type: "key", side: "right", x: 12.55, y: 1.35, width: 1, height: 1, rotation: 0, legend: ":" },
-    { id: "R-1-6", type: "key", side: "right", x: 13.55, y: 1.35, width: 1, height: 1, rotation: 0, legend: "Enter" },
+    { id: "R-1-1", type: "key", side: "right", x: 8.55, y: 1.35, width: 1, height: 1, rotation: 0, legend: "H" },
+    { id: "R-1-2", type: "key", side: "right", x: 9.55, y: 1.25, width: 1, height: 1, rotation: 0, legend: "J" },
+    { id: "R-1-3", type: "key", side: "right", x: 10.55, y: 1.1, width: 1, height: 1, rotation: 0, legend: "K" },
+    { id: "R-1-4", type: "key", side: "right", x: 11.55, y: 1.25, width: 1, height: 1, rotation: 0, legend: "L" },
+    { id: "R-1-5", type: "key", side: "right", x: 12.55, y: 1.45, width: 1, height: 1, rotation: 0, legend: ":" },
+    { id: "R-1-6", type: "key", side: "right", x: 13.55, y: 1.45, width: 1, height: 1, rotation: 0, legend: "Enter" },
     // 段3(内側列にB。人差し指用)
-    { id: "R-2-0", type: "key", side: "right", x: 7.55, y: 2.35, width: 1, height: 1, rotation: 0, legend: "B" },
-    { id: "R-2-1", type: "key", side: "right", x: 8.55, y: 2.25, width: 1, height: 1, rotation: 0, legend: "N" },
-    { id: "R-2-2", type: "key", side: "right", x: 9.55, y: 2.1, width: 1, height: 1, rotation: 0, legend: "M" },
-    { id: "R-2-3", type: "key", side: "right", x: 10.55, y: 1.95, width: 1, height: 1, rotation: 0, legend: "," },
-    { id: "R-2-4", type: "key", side: "right", x: 11.55, y: 2.1, width: 1, height: 1, rotation: 0, legend: "." },
-    { id: "R-2-5", type: "key", side: "right", x: 12.55, y: 2.35, width: 1, height: 1, rotation: 0, legend: "(" },
-    { id: "R-2-6", type: "key", side: "right", x: 13.55, y: 2.35, width: 1, height: 1, rotation: 0, legend: ")" },
+    { id: "R-2-0", type: "key", side: "right", x: 7.55, y: 2.45, width: 1, height: 1, rotation: 0, legend: "B" },
+    { id: "R-2-1", type: "key", side: "right", x: 8.55, y: 2.35, width: 1, height: 1, rotation: 0, legend: "N" },
+    { id: "R-2-2", type: "key", side: "right", x: 9.55, y: 2.2, width: 1, height: 1, rotation: 0, legend: "M" },
+    { id: "R-2-3", type: "key", side: "right", x: 10.55, y: 2.05, width: 1, height: 1, rotation: 0, legend: "," },
+    { id: "R-2-4", type: "key", side: "right", x: 11.55, y: 2.2, width: 1, height: 1, rotation: 0, legend: "." },
+    { id: "R-2-5", type: "key", side: "right", x: 12.55, y: 2.45, width: 1, height: 1, rotation: 0, legend: "(" },
+    { id: "R-2-6", type: "key", side: "right", x: 13.55, y: 2.45, width: 1, height: 1, rotation: 0, legend: ")" },
     // 段4(親指列。トラックボール+5キー)
-    { id: "R-TRACKBALL", type: "trackball", side: "right", x: 8.1, y: 3.7, width: 0.9, height: 0.9, rotation: 0, legend: "トラックボール" },
-    { id: "R-3-2", type: "key", side: "right", x: 9.55, y: 3.1, width: 1, height: 1, rotation: 0, legend: "Wi-Fi" }, // Wi-Fi印字のキー
-    { id: "R-3-3", type: "key", side: "right", x: 10.55, y: 2.95, width: 1, height: 1, rotation: 0, legend: "←" },
-    { id: "R-3-4", type: "key", side: "right", x: 11.55, y: 3.1, width: 1, height: 1, rotation: 0, legend: "M1" },
-    { id: "R-3-5", type: "key", side: "right", x: 12.55, y: 3.3, width: 1, height: 1, rotation: 0, legend: "M2" },
-    { id: "R-3-6", type: "key", side: "right", x: 13.55, y: 3.3, width: 1, height: 1, rotation: 0, legend: "M3" },
+    { id: "R-TRACKBALL", type: "trackball", side: "right", x: 8.1, y: 3.8, width: 0.9, height: 0.9, rotation: 0, legend: "トラックボール" },
+    { id: "R-3-2", type: "key", side: "right", x: 9.55, y: 3.2, width: 1, height: 1, rotation: 0, legend: "Wi-Fi" }, // Wi-Fi印字のキー
+    { id: "R-3-3", type: "key", side: "right", x: 10.55, y: 3.05, width: 1, height: 1, rotation: 0, legend: "←" },
+    { id: "R-3-4", type: "key", side: "right", x: 11.55, y: 3.2, width: 1, height: 1, rotation: 0, legend: "M1" },
+    { id: "R-3-5", type: "key", side: "right", x: 12.55, y: 3.4, width: 1, height: 1, rotation: 0, legend: "M2" },
+    { id: "R-3-6", type: "key", side: "right", x: 13.55, y: 3.4, width: 1, height: 1, rotation: 0, legend: "M3" },
   ],
 };

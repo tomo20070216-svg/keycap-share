@@ -41,6 +41,7 @@ const COLORS = {
   primaryText: "#ffffff",
   secondaryText: "#a1a1aa",
   emptyDeviceText: "#71717a",
+  outsideText: "#3f3f46",
 };
 
 const ELEMENT_TYPE_NAMES: Record<ElementType, string> = {
@@ -53,14 +54,14 @@ const ELEMENT_TYPE_NAMES: Record<ElementType, string> = {
 const ACTION_SYMBOLS: Record<RenderLabel["action"], string> = {
   press: "",
   hold: "長押し",
-  cw: "↻",
-  ccw: "↺",
+  // OGP画像用のフォント(Noto Sans JP)には回転の矢印(↻↺)が無いため、文字で表す
+  cw: "右回し",
+  ccw: "左回し",
   up: "↑",
   down: "↓",
   left: "←",
   right: "→",
   tap: "タップ",
-  click: "クリック",
 };
 
 const LABEL_STACK: CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center" };
@@ -144,7 +145,7 @@ function KeyLabels({ item, width, unit, fontFamily }: { item: RenderItem; width:
   );
 }
 
-function DeviceLabels({ item, width, unit, fontFamily }: { item: RenderItem; width: number; unit: number; fontFamily: string }) {
+function DeviceLabels({ item, width, height, unit, fontFamily }: { item: RenderItem; width: number; height: number; unit: number; fontFamily: string }) {
   const maxWidth = width * 0.9;
   if (item.isEmpty) {
     const name = ELEMENT_TYPE_NAMES[item.type];
@@ -154,27 +155,86 @@ function DeviceLabels({ item, width, unit, fontFamily }: { item: RenderItem; wid
       </div>
     );
   }
+  // ダイヤル・トラックボールの文字は要素の外側に置く(OutsideLabels)
+  if (item.type !== "scrollpad") return null;
+
+  // スクロールパッドは縦長なので、中に上から ↑・タップ・↓ の順で置く(割り当てのない位置は空ける)
+  const slot = (action: RenderLabel["action"]) => {
+    const extra = item.extras.find((e) => e.action === action);
+    const text = extra ? `${ACTION_SYMBOLS[action]} ${extra.text}` : "";
+    return (
+      <div
+        key={action}
+        style={{
+          display: "flex",
+          height: unit * 0.3,
+          alignItems: "center",
+          color: COLORS.primaryText,
+          fontSize: text ? fitFontSize(text, maxWidth, unit * 0.16) : 1,
+          fontFamily,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {text}
+      </div>
+    );
+  };
   return (
-    // Satori ではフラグメントの子が縦に並ばないことがあるため、縦並びのdivで包む
-    <div style={LABEL_STACK}>
-      {item.extras.map((extra) => {
-        const text = `${ACTION_SYMBOLS[extra.action]} ${extra.text}`;
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        height: height * 0.8,
+      }}
+    >
+      {slot("up")}
+      {slot("tap")}
+      {slot("down")}
+    </div>
+  );
+}
+
+function OutsideLabels({ model, unit, fontFamily }: { model: KeymapRenderModel; unit: number; fontFamily: string }) {
+  return (
+    <>
+      {model.outsideLabels.map((label) => {
+        const width = label.width * unit;
+        const height = label.height * unit;
+        const isDial = label.action === "cw" || label.action === "ccw";
+        // ダイヤルは「右回し」などの説明が長いので、説明を小さく上に、割り当てを下に置く
+        const text = isDial ? label.text : `${ACTION_SYMBOLS[label.action]} ${label.text}`;
+        const fontSize = fitFontSize(text, width, Math.min(height * (isDial ? 0.5 : 0.8), unit * 0.2));
         return (
           <div
-            key={extra.action}
+            key={`${label.elementId}:${label.action}`}
             style={{
-              color: COLORS.primaryText,
-              fontSize: fitFontSize(text, maxWidth, unit * 0.15),
-              lineHeight: 1.2,
+              position: "absolute",
+              left: (label.x + PADDING) * unit,
+              top: (label.y + PADDING) * unit,
+              width,
+              height,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: label.align === "left" ? "flex-start" : label.align === "right" ? "flex-end" : "center",
+              color: COLORS.outsideText,
+              fontWeight: 700,
               fontFamily,
               whiteSpace: "nowrap",
             }}
           >
-            {text}
+            {isDial && (
+              <div style={{ fontSize: fontSize * 0.7, color: COLORS.emptyDeviceText, lineHeight: 1.1 }}>
+                {ACTION_SYMBOLS[label.action]}
+              </div>
+            )}
+            <div style={{ fontSize, lineHeight: 1.1 }}>{text}</div>
           </div>
         );
       })}
-    </div>
+    </>
   );
 }
 
@@ -249,11 +309,12 @@ export function KeymapDiagram({
               {item.type === "key" ? (
                 <KeyLabels item={item} width={b.width} unit={unit} fontFamily={fontFamily} />
               ) : (
-                <DeviceLabels item={item} width={b.width} unit={unit} fontFamily={fontFamily} />
+                <DeviceLabels item={item} width={b.width} height={b.height} unit={unit} fontFamily={fontFamily} />
               )}
             </div>
           );
         })}
+      <OutsideLabels model={model} unit={unit} fontFamily={fontFamily} />
     </div>
   );
 }
