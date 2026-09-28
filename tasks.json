@@ -139,13 +139,20 @@
       "phase": 0,
       "role": "executor",
       "task": "Vercel・Supabaseの最新の無料枠(上限・制約・超過時の挙動)を調べ、このサイトの想定規模で無料枠に収まるかを報告する",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "調査結果がprogress.mdにまとめられ、各項目に出典(公式ページのURLと確認日)がある",
         "OGP画像生成(ImageResponse)の実行回数など、このサイト特有の使い方で上限に達しうる箇所が挙げられている",
         "上限を超えたときに自動で課金されるか、停止するかが書かれている"
       ],
-      "evidence": [],
+      "evidence": [
+        "結論: 現時点の想定規模(個人・非商用)なら無料枠で運用可能。docs/requirements.mdの「VercelとSupabaseの無料枠調査」に出典付きで記録",
+        "出典1: Vercel Limits (vercel.com/docs/limits)、Fair Use Guidelines (vercel.com/docs/limits/fair-use-guidelines)、確認日2026-09-28。Hobbyは転送量100GB/月、Function実行100万回/月、Image変換5,000回/月などの目安を確認",
+        "出典2: Supabase Pricing (supabase.com/pricing)、確認日2026-09-28。Free枠はDB 500MB、ストレージ1GB、MAU 50,000、エグレス5GB、APIリクエスト無制限",
+        "超過時の挙動: Vercel Hobbyは支払い方法登録なしのため自動課金なし(利用是正の連絡や制限が入る可能性)。Supabase Freeは超過時の自動課金可否が公式に未記載のため『未確定』と明記",
+        "このサイト特有の注意点として2つ発見: (1) Vercel Hobbyは非商用限定(広告・決済があるとPro必須。現計画は非商用なので問題なし) (2) Supabase Freeプロジェクトは1週間無アクセスで自動停止する(フェーズ6での対策検討が必要)",
+        "評価役確認: docs/requirements.mdの記載が出典・確認日・超過時挙動・サイト固有の注意点の4条件を満たしていることを確認した"
+      ],
       "dependencies": []
     },
     {
