@@ -68,3 +68,15 @@ describe("validateCombos コンボと物理レイアウトの整合", () => {
     expect(errors.map((e) => e.comboIndex)).toEqual([0, 1, 2]);
   });
 });
+
+describe("コンボのサンプル配列のマクロ", () => {
+  it("マクロ「署名」は M1 キー(R-3-4)の通常レイヤーに置かれ、ほかのキーには無い", () => {
+    const base = orcaEchoComboSampleLayers.find((l) => l.layerNumber === 0)!;
+    const signed = base.assignments.filter((a) => a.label === "署名");
+    expect(signed).toEqual([{ elementId: "R-3-4", action: "press", label: "署名" }]);
+    // fn1・fn2 の M1 は工場出荷時のまま
+    const m1 = (n: number) =>
+      orcaEchoComboSampleLayers.find((l) => l.layerNumber === n)!.assignments.find((a) => a.elementId === "R-3-4")?.label;
+    expect([m1(1), m1(2)]).toEqual(["0", "B1"]);
+  });
+});

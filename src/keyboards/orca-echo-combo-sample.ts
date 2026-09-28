@@ -25,12 +25,17 @@ export const orcaEchoComboSampleMacros: Macro[] = [
   { name: "署名", description: "(仮データ)「よろしくお願いいたします。」と入力する" },
 ];
 
-/** マクロ「署名」を割り当てたキーを示すため、通常レイヤーの印字なしキー(左手の小指側)に表示名を置く */
+/**
+ * マクロ「署名」は M1 キー(R-3-4)に置く。M1〜M3 はもともとマクロを入れるためのキー(人間の確認、2026-09-29)。
+ * 通常レイヤーの M1 の表示名「M1」を「署名」に置き換える(fn1の「0」、fn2の「B1」はそのまま)。
+ */
 export const orcaEchoComboSampleLayers: Layer[] = orcaEchoFactoryDefaultLayers.map((layer) =>
   layer.layerNumber === 0
     ? {
         ...layer,
-        assignments: [...layer.assignments, { elementId: "L-3-1", action: "press", label: "署名" }],
+        assignments: layer.assignments.map((a) =>
+          a.elementId === "R-3-4" && a.action === "press" ? { ...a, label: "署名" } : a
+        ),
       }
     : layer
 );
