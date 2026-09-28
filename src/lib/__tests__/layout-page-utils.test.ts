@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findLayerByParam, formatDateJa } from "@/lib/layout-page-utils";
+import { findLayerByParam, formatDateJa, parsePageParam, totalPages } from "@/lib/layout-page-utils";
 import type { Layout } from "@/lib/schemas";
 
 const layout = {
@@ -28,5 +28,26 @@ describe("formatDateJa", () => {
   it("日本時間の日付にする(UTCの15時以降は翌日)", () => {
     expect(formatDateJa("2026-09-28T13:55:18.961Z")).toBe("2026/09/28");
     expect(formatDateJa("2026-09-28T15:30:00.000Z")).toBe("2026/09/29");
+  });
+});
+
+describe("parsePageParam 一覧のページ番号", () => {
+  it("省略時は1、正の整数はその値", () => {
+    expect(parsePageParam(undefined)).toBe(1);
+    expect(parsePageParam("1")).toBe(1);
+    expect(parsePageParam("12")).toBe(12);
+  });
+  it("0・負の数・数字でない値・先頭0・複数指定は null", () => {
+    for (const v of ["0", "-1", "abc", "01", "1.5", ""]) expect(parsePageParam(v), v).toBeNull();
+    expect(parsePageParam(["1", "2"])).toBeNull();
+  });
+});
+
+describe("totalPages 総ページ数", () => {
+  it("20件ずつで切り上げ、0件でも1ページ", () => {
+    expect(totalPages(0)).toBe(1);
+    expect(totalPages(20)).toBe(1);
+    expect(totalPages(21)).toBe(2);
+    expect(totalPages(5, 2)).toBe(3);
   });
 });

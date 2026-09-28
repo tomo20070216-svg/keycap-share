@@ -195,23 +195,69 @@ type LayoutRow = {
   macros: { position: number; name: string; description: string }[];
 };
 
-/** 公開URL用のslugで配列を1件取得する。見つからなければ null。 */
-export async function getLayoutBySlug(slug: string): Promise<Layout | null> {
-  const { data, error } = await supabase
-    .from("layouts")
-    .select(
-      `id, slug, keyboard_id, title, description, author_name, forked_from_layout_id,
+/** 配列を取得するときの列(1件取得と一覧で共通) */
+const LAYOUT_SELECT = `id, slug, keyboard_id, title, description, author_name, forked_from_layout_id,
        created_at, updated_at,
        layers ( layer_number, layer_name, assignments ( element_id, action, label ) ),
        layout_tags ( tags ( name ) ),
        combos ( position, element_ids, label, layer_numbers ),
-       macros ( position, name, description )`
-    )
+       macros ( position, name, description )`;
+
+/** 公開URL用のslugで配列を1件取得する。見つからなければ null。一覧に出さない配列も取得できる */
+export async function getLayoutBySlug(slug: string): Promise<Layout | null> {
+  const { data, error } = await supabase
+    .from("layouts")
+    .select(LAYOUT_SELECT)
     .eq("slug", slug)
     .maybeSingle<LayoutRow>();
   if (error) throw new Error(`配列の取得に失敗しました: ${error.message}`);
-  if (!data) return null;
+  return data ? rowToLayout(data) : null;
+}
 
+export type LayoutListResult = {
+  layouts: Layout[];
+  /** 条件に合う配列の総数(ページ分けに使う) */
+  total: number;
+};
+
+/**
+ * 一覧用: 一覧に出す配列(is_listed)を新しい順に取得する。
+ * tag を指定すると、そのタグが付いた配列だけに絞り込む。
+ * page は1始まり。
+ */
+export async function listLayouts(options: { page?: number; perPage?: number; tag?: string } = {}): Promise<LayoutListResult> {
+  const page = Math.max(1, Math.floor(options.page ?? 1));
+  const perPage = Math.min(50, Math.max(1, Math.floor(options.perPage ?? 20)));
+  const from = (page - 1) * perPage;
+
+  let layoutIds: string[] | undefined;
+  if (options.tag !== undefined) {
+    // タグ名 → タグのid → そのタグが付いた配列のid の順に調べる
+    // (配列の取得と同時に絞り込むと、返ってくるタグの一覧まで絞り込まれてしまうため)
+    const { data: tag, error: tagError } = await supabase.from("tags").select("id").eq("name", options.tag).maybeSingle();
+    if (tagError) throw new Error(`タグの取得に失敗しました: ${tagError.message}`);
+    if (!tag) return { layouts: [], total: 0 };
+    const { data: links, error: linkError } = await supabase.from("layout_tags").select("layout_id").eq("tag_id", tag.id);
+    if (linkError) throw new Error(`タグの取得に失敗しました: ${linkError.message}`);
+    layoutIds = links.map((l) => l.layout_id);
+    if (layoutIds.length === 0) return { layouts: [], total: 0 };
+  }
+
+  let query = supabase
+    .from("layouts")
+    .select(LAYOUT_SELECT, { count: "exact" })
+    .eq("is_listed", true)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true }) // 作成日時が同じときも並び順を固定する
+    .range(from, from + perPage - 1);
+  if (layoutIds) query = query.in("id", layoutIds);
+
+  const { data, error, count } = await query.returns<LayoutRow[]>();
+  if (error) throw new Error(`配列の一覧の取得に失敗しました: ${error.message}`);
+  return { layouts: data.map(rowToLayout), total: count ?? 0 };
+}
+
+function rowToLayout(data: LayoutRow): Layout {
   return LayoutSchema.parse({
     id: data.id,
     slug: data.slug,

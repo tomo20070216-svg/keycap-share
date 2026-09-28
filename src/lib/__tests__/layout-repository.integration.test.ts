@@ -17,6 +17,7 @@ import {
   createLayout,
   getKeyboard,
   getLayoutBySlug,
+  listLayouts,
   saveKeyboard,
 } from "@/lib/layout-repository";
 import type { Layer, LayoutInput } from "@/lib/schemas";
@@ -133,5 +134,46 @@ describe("コンボ・マクロの保存・取得(Supabase)", () => {
       )
     ).rejects.toThrow("コンボの検証エラー");
     expect(await getLayoutBySlug(slug)).toBeNull();
+  });
+});
+
+describe("配列の一覧(Supabase、0003適用後)", () => {
+  it("一覧には工場出荷時配列が出て、コンボのサンプル配列(一覧に出さない印)は出ない", async () => {
+    const { layouts, total } = await listLayouts({ perPage: 50 });
+    const slugs = layouts.map((l) => l.slug);
+    expect(slugs).toContain(FACTORY_DEFAULT_SLUG);
+    expect(slugs).not.toContain("orca-echo-combo-sample");
+    expect(total).toBe(layouts.length);
+    console.log(`一覧: ${total}件 (${slugs.join(", ")})`);
+  });
+
+  it("新しい順に並ぶ", async () => {
+    const { layouts } = await listLayouts({ perPage: 50 });
+    const times = layouts.map((l) => Date.parse(l.createdAt));
+    expect(times).toEqual([...times].sort((a, b) => b - a));
+  });
+
+  it("ページ分け: 1ページ1件にすると、総数は変わらず1件ずつ返る", async () => {
+    const all = await listLayouts({ perPage: 50 });
+    const first = await listLayouts({ page: 1, perPage: 1 });
+    expect(first.total).toBe(all.total);
+    expect(first.layouts.map((l) => l.slug)).toEqual(all.layouts.slice(0, 1).map((l) => l.slug));
+    const beyond = await listLayouts({ page: all.total + 1, perPage: 1 });
+    expect(beyond.layouts).toEqual([]);
+  });
+
+  it("URLを直接開けば、一覧に出さない配列も取得できる", async () => {
+    expect(await getLayoutBySlug("orca-echo-combo-sample")).not.toBeNull();
+  });
+
+  it("タグで絞り込むと、そのタグが付いた一覧に出す配列だけが返る。タグの一覧は絞り込まれない", async () => {
+    const factory = await listLayouts({ tag: "工場出荷時" });
+    expect(factory.layouts.map((l) => l.slug)).toContain(FACTORY_DEFAULT_SLUG);
+    expect(factory.layouts.every((l) => l.tags.includes("工場出荷時"))).toBe(true);
+    // コンボのサンプル配列(タグ: サンプル)は一覧に出さない印があるので、タグで絞り込んでも出ない
+    const sample = await listLayouts({ tag: "サンプル" });
+    expect(sample.layouts.map((l) => l.slug)).not.toContain("orca-echo-combo-sample");
+    // 存在しないタグは0件
+    expect(await listLayouts({ tag: "存在しないタグ" })).toEqual({ layouts: [], total: 0 });
   });
 });

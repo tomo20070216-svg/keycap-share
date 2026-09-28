@@ -1,15 +1,35 @@
-/**
- * トップページ。フェーズ3の P3-5 で「新着順の配列の一覧」に置き換える。
- */
-export default function Home() {
+import { notFound } from "next/navigation";
+import { LayoutList } from "@/components/LayoutList";
+import { getKeyboardsFor } from "@/lib/layout-page-data";
+import { LAYOUTS_PER_PAGE, parsePageParam, totalPages } from "@/lib/layout-page-utils";
+import { listLayouts } from "@/lib/layout-repository";
+
+/** トップページ: 配列の一覧(新着順)(P3-5) */
+export default async function Home(props: PageProps<"/">) {
+  const page = parsePageParam((await props.searchParams).page);
+  if (page === null) notFound();
+  const { layouts, total } = await listLayouts({ page, perPage: LAYOUTS_PER_PAGE });
+  if (page > totalPages(total)) notFound();
+  const keyboards = await getKeyboardsFor(layouts);
+
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-10">
-      <h1 className="text-2xl font-bold">分割キーボードの配列を共有しよう</h1>
-      <p className="text-zinc-600">
-        分割キーボードのキー配列と「なぜこの配置にしたか」を投稿して、X(旧Twitter)で共有できるサイトです。
-        まずは Keychron Orca echo に対応しています。
-      </p>
-      <p className="text-sm text-zinc-500">配列の一覧は準備中です。</p>
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
+      <section className="flex flex-col gap-2">
+        <h1 className="text-2xl font-bold">分割キーボードの配列を共有しよう</h1>
+        <p className="text-zinc-600">
+          分割キーボードのキー配列と「なぜこの配置にしたか」を投稿して、X(旧Twitter)で共有できるサイトです。
+          まずは Keychron Orca echo に対応しています。
+        </p>
+      </section>
+      <h2 className="text-lg font-bold">新着の配列</h2>
+      <LayoutList
+        layouts={layouts}
+        keyboards={keyboards}
+        total={total}
+        page={page}
+        basePath="/"
+        emptyMessage="まだ配列が投稿されていません。"
+      />
     </main>
   );
 }

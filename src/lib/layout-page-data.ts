@@ -15,3 +15,10 @@ export const getLayoutPageData = cache(
     return { layout, keyboard };
   }
 );
+
+/** 一覧に出てくる配列の機種をまとめて取得する(機種ごとに1回だけ) */
+export async function getKeyboardsFor(layouts: Layout[]): Promise<Map<string, KeyboardPhysicalLayout>> {
+  const ids = [...new Set(layouts.map((l) => l.keyboardId))];
+  const keyboards = await Promise.all(ids.map((id) => getKeyboard(id)));
+  return new Map(keyboards.flatMap((k) => (k ? [[k.id, k] as const] : [])));
+}
