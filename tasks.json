@@ -307,13 +307,18 @@
       "phase": 2,
       "role": "executor",
       "task": "写真(docs/keyboards/orca-echo-photo.png)からOrca echoの座標(列ごとの段のずれ・親指キーとダイヤルの傾き・トラックボール/スクロールパッドの位置)を推定し、src/keyboards/orca-echo.ts を実物に近づける",
-      "status": "todo",
+      "status": "in_progress",
       "passes": [
         "推定した座標で描いたキー図のスクリーンショットを人間が実機と見比べ、確認した記録がある",
         "人間の確認が取れるまで、orca-echo.ts の「仮の値」表記と isProvisional: true を維持している",
         "既存のテスト(キー数・要素の位置など)が成功する"
       ],
-      "evidence": [],
+      "evidence": [
+        "写真からキーの中心をピクセル単位で読み取り、規則的な並び(共通のキー間隔+列ごとの段のずれ)に最小二乗法で当てはめて src/keyboards/orca-echo.ts の座標53要素を置き換えた(evidence/p2-4/README.md、evidence/p2-4/coords.py)",
+        "比較画像 evidence/p2-4/compare.png(写真と推定座標のキー図)。npm test 36件成功",
+        "「仮の値」表記と isProvisional: true は維持している",
+        "未完了: 人間による実機との見比べ確認"
+      ],
       "dependencies": ["P2-3"]
     },
     {
