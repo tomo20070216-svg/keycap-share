@@ -546,12 +546,18 @@
       "phase": 3,
       "role": "reviewer",
       "task": "評価役が evals/acceptance.md のフェーズ3の確認方法で、すべてのURL(/k/[slug]、/k/[slug]/[layer]、一覧、タグ)を確認する(フェーズ3の完了の目安)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "各URLのスクリーンショットまたはHTML出力がそろっている",
         "本番への反映(push)は人間の承認を得てから行い、本番URLでも表示を確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間の承認(push OK、2026-09-29)を得て main に push(7158540..c37e630)。Vercelの本番デプロイ後に確認",
+        "本番のステータスコード: / 200、/k/orca-echo-factory-default 200、/k/.../0・/1・/2 200、/k/.../3 404、/k/no-such-slug 404、/tags/工場出荷時 200、/?page=2 404、/dev/keymap 404",
+        "本番のHTML(JavaScriptなし)にタイトル・キーの文字・レイヤー名・lang=ja が含まれることを確認",
+        "本番のスクリーンショット: evidence/p3-7/(一覧・配列ページ・レイヤーページ3つ・コンボのサンプル・タグ)(evidence/p3-7/README.md)",
+        "評価役確認: passes 2条件と evals/acceptance.md フェーズ3の確認方法を満たすことを確認した"
+      ],
       "dependencies": [
         "P3-6"
       ]
