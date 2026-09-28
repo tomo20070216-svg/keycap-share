@@ -417,12 +417,17 @@
       "phase": 3,
       "role": "executor",
       "task": "共通の枠: サイト名(仮: keycap-share)のヘッダーを付け、トップページのNext.jsのひな形を置き換える。ページの言語を日本語(lang=\"ja\")にする",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "全ページに共通のヘッダー(サイト名・一覧へのリンク)が表示されるスクリーンショットがある",
         "Next.jsのひな形の文言・画像がトップページに残っていない"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/app/layout.tsx を日本語(lang=ja)・サイト名(仮: keycap-share、src/lib/site.ts)のヘッダー付きに変更。トップページのNext.jsのひな形を置き換え、ひな形用の画像(public/*.svg 5つ)を削除。配色は明るい色に統一、フォントは日本語の標準フォント",
+        "スクリーンショット: evidence/p3-1/page_.png(トップ)、evidence/p3-1/page_dev_layouts_orca-echo-factory-default.png(別ページでも同じヘッダー)",
+        "npx tsc --noEmit、eslint、npm run build 成功",
+        "評価役確認: passes 2条件(共通ヘッダー / ひな形の文言・画像が残っていない)を確認した"
+      ],
       "dependencies": [
         "P3-PLACEHOLDER"
       ]
