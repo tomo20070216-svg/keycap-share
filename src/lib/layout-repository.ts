@@ -6,7 +6,7 @@ import {
   type Layout,
   type LayoutInput,
 } from "@/lib/schemas";
-import { assertValidLayers } from "@/lib/layout-validation";
+import { assertValidCombos, assertValidLayers } from "@/lib/layout-validation";
 import { generateEditSecret, generateSlug, hashEditSecret } from "@/lib/edit-secret";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { supabase } from "@/lib/supabase";
@@ -67,6 +67,7 @@ export async function createLayout(
   const keyboard = await getKeyboard(parsed.keyboardId);
   if (!keyboard) throw new Error(`機種が見つかりません: ${parsed.keyboardId}`);
   assertValidLayers(parsed.layers, keyboard);
+  assertValidCombos(parsed.combos, parsed.layers, keyboard);
 
   const db = createServerSupabase();
   const slug = options.slug ?? generateSlug();
@@ -121,6 +122,31 @@ export async function createLayout(
       if (error) throw new Error(`割り当ての保存に失敗しました: ${error.message}`);
     }
 
+    if (parsed.combos.length > 0) {
+      const { error } = await db.from("combos").insert(
+        parsed.combos.map((c, position) => ({
+          layout_id: layoutId,
+          position,
+          element_ids: c.elementIds,
+          label: c.label,
+          layer_numbers: c.layerNumbers,
+        }))
+      );
+      if (error) throw new Error(`コンボの保存に失敗しました: ${error.message}`);
+    }
+
+    if (parsed.macros.length > 0) {
+      const { error } = await db.from("macros").insert(
+        parsed.macros.map((m, position) => ({
+          layout_id: layoutId,
+          position,
+          name: m.name,
+          description: m.description,
+        }))
+      );
+      if (error) throw new Error(`マクロの保存に失敗しました: ${error.message}`);
+    }
+
     if (parsed.tags.length > 0) {
       const tagNames = [...new Set(parsed.tags)];
       const { error: upsertError } = await db
@@ -165,6 +191,8 @@ type LayoutRow = {
     assignments: { element_id: string; action: string; label: string }[];
   }[];
   layout_tags: { tags: { name: string } | null }[];
+  combos: { position: number; element_ids: string[]; label: string; layer_numbers: number[] }[];
+  macros: { position: number; name: string; description: string }[];
 };
 
 /** 公開URL用のslugで配列を1件取得する。見つからなければ null。 */
@@ -175,7 +203,9 @@ export async function getLayoutBySlug(slug: string): Promise<Layout | null> {
       `id, slug, keyboard_id, title, description, author_name, forked_from_layout_id,
        created_at, updated_at,
        layers ( layer_number, layer_name, assignments ( element_id, action, label ) ),
-       layout_tags ( tags ( name ) )`
+       layout_tags ( tags ( name ) ),
+       combos ( position, element_ids, label, layer_numbers ),
+       macros ( position, name, description )`
     )
     .eq("slug", slug)
     .maybeSingle<LayoutRow>();
@@ -194,6 +224,13 @@ export async function getLayoutBySlug(slug: string): Promise<Layout | null> {
     createdAt: new Date(data.created_at).toISOString(),
     updatedAt: new Date(data.updated_at).toISOString(),
     tags: data.layout_tags.flatMap((lt) => (lt.tags ? [lt.tags.name] : [])),
+    // 並び順(position)がキー図の番号①②…になるので、必ず並べ替えてから返す
+    combos: [...data.combos]
+      .sort((a, b) => a.position - b.position)
+      .map((c) => ({ elementIds: c.element_ids, label: c.label, layerNumbers: c.layer_numbers })),
+    macros: [...data.macros]
+      .sort((a, b) => a.position - b.position)
+      .map((m) => ({ name: m.name, description: m.description })),
     layers: [...data.layers]
       .sort((a, b) => a.layer_number - b.layer_number)
       .map((layer) => ({

@@ -330,13 +330,19 @@
       "phase": 2,
       "role": "executor",
       "task": "コンボ(複数キーの同時押し)とマクロ一覧のデータ設計: Zodスキーマ追加とSQL(supabase/migrations/0002)作成。Supabaseへの適用は人間の承認が必要",
-      "status": "todo",
+      "status": "in_progress",
       "passes": [
         "コンボ(対象の要素2つ以上・表示名・対象レイヤー)とマクロ(名前・説明)のZodスキーマとテストがある",
         "SQLがローカルのPostgreSQLで検証され、人間の承認を得てSupabaseに適用されている",
         "配列の保存・取得(layout-repository)がコンボ・マクロに対応し、結合テストで確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間の決定(2026-09-29): 実例のコンボ3つは全レイヤー共通 / 結合テスト用にコンボのサンプル配列を固定slug orca-echo-combo-sample で1件残す(A案) / マクロは仮データ",
+        "src/lib/schemas.ts に ComboSchema・MacroSchema を追加、src/lib/layout-validation.ts に validateCombos を追加。src/lib/__tests__/combo-macro.test.ts 6件成功(npm test 全体48件成功)",
+        "supabase/migrations/0002_combos_macros.sql を作成(combos・macrosテーブル、assignmentsのCHECK制約からclickを削除)。ローカルPostgreSQL 17.6で0001適用済み・データありの状態に適用して検証(evidence/p2-5/local-migration-test.md)。Supabase上のclickの割り当ては0件を確認済み",
+        "layout-repository をコンボ・マクロの保存・取得に対応。結合テストを3件追加(未実行: 0002の適用待ち)",
+        "未完了: 人間の承認を得て0002をSupabaseに適用 / 結合テストの実行"
+      ],
       "dependencies": ["P2-3"]
     },
     {

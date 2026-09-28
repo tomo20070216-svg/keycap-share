@@ -88,6 +88,34 @@ export const LayerSchema = z.object({
 export type Layer = z.infer<typeof LayerSchema>;
 
 /**
+ * コンボ: 複数のキーを同時に押すと、別の入力になる設定(ZMKの combos)。
+ * キー図の下に「コンボ一覧」として表示し、対象キーには一覧の番号(①②…)を付ける。
+ * 番号は配列内の並び順で決まる。
+ */
+export const ComboSchema = z.object({
+  elementIds: z
+    .array(z.string().min(1))
+    .min(2)
+    .max(10)
+    .refine((ids) => new Set(ids).size === ids.length, "同じキーを2回指定できません"),
+  label: z.string().min(1).max(40), // 表示用の名前。例: "左クリック"
+  layerNumbers: z.array(z.number().int().min(0)).default([]), // 空 = 全レイヤー共通
+});
+export type Combo = z.infer<typeof ComboSchema>;
+
+/**
+ * マクロ: 一連のキー操作を1つのキーに登録する設定。
+ * キーには短い名前(name)を表示し、キー図の下の「マクロ一覧」で中身を文章で説明する。
+ * 具体的なキー操作の手順は記録しない(plan.md 方針4「表示用の名前」)。
+ * キーとはデータ上でつなげず、キーの表示名とマクロの名前をそろえる緩い対応にする。
+ */
+export const MacroSchema = z.object({
+  name: z.string().min(1).max(20),
+  description: z.string().max(200).default(""),
+});
+export type Macro = z.infer<typeof MacroSchema>;
+
+/**
  * 配列(layout)の新規作成時に受け取る入力の形。
  * サーバー側で id・slug・editSecretHash・createdAt 等を付与してDBに保存する。
  */
@@ -99,8 +127,11 @@ export const LayoutInputSchema = z.object({
   forkedFromLayoutId: z.string().uuid().optional(), // 「コピーして編集」機能で使う複製元ID
   tags: z.array(z.string().min(1).max(20)).max(10).default([]),
   layers: z.array(LayerSchema).min(1),
+  combos: z.array(ComboSchema).max(50).default([]),
+  macros: z.array(MacroSchema).max(50).default([]),
 });
-export type LayoutInput = z.infer<typeof LayoutInputSchema>;
+/** 入力側の型(tags・combos・macros は省略できる) */
+export type LayoutInput = z.input<typeof LayoutInputSchema>;
 
 /** DBから取得した配列(公開情報。editSecretHashは含めない) */
 export const LayoutSchema = LayoutInputSchema.extend({

@@ -7,6 +7,11 @@
 import { describe, expect, it } from "vitest";
 import { orcaEcho } from "@/keyboards/orca-echo";
 import { orcaEchoFactoryDefaultLayers } from "@/keyboards/orca-echo-factory-default";
+import {
+  orcaEchoComboSampleCombos,
+  orcaEchoComboSampleLayers,
+  orcaEchoComboSampleMacros,
+} from "@/keyboards/orca-echo-combo-sample";
 import { hashEditSecret } from "@/lib/edit-secret";
 import {
   createLayout,
@@ -79,5 +84,54 @@ describe("配列の保存・取得(Supabase)", () => {
 
   it("公開用キーでは存在しないslugは null になる", async () => {
     expect(await getLayoutBySlug("no-such-slug-xyz")).toBeNull();
+  });
+});
+
+describe("コンボ・マクロの保存・取得(Supabase)", () => {
+  const COMBO_SAMPLE_SLUG = "orca-echo-combo-sample";
+  const comboSampleInput: LayoutInput = {
+    keyboardId: orcaEcho.id,
+    title: "Orca echo コンボのサンプル配列",
+    description:
+      "工場出荷時配列に、コンボ(J+K→左クリック、K+L→右クリック、J+L→ホイールクリック。全レイヤー共通)と仮のマクロ「署名」を加えた表示確認用の配列。",
+    tags: ["サンプル"],
+    layers: orcaEchoComboSampleLayers,
+    combos: orcaEchoComboSampleCombos,
+    macros: orcaEchoComboSampleMacros,
+  };
+
+  it("コンボのサンプル配列を保存し、公開用キーで取得したコンボ・マクロが元データと並び順まで一致する", async () => {
+    await saveKeyboard(orcaEcho);
+    let layout = await getLayoutBySlug(COMBO_SAMPLE_SLUG);
+    if (layout) {
+      console.log(`保存済みの配列を使用: slug=${layout.slug} id=${layout.id}`);
+    } else {
+      layout = (await createLayout(comboSampleInput, { slug: COMBO_SAMPLE_SLUG })).layout;
+      console.log(`新規保存: slug=${layout.slug} id=${layout.id}`);
+    }
+
+    expect(layout.combos).toEqual(orcaEchoComboSampleCombos);
+    expect(layout.macros).toEqual(orcaEchoComboSampleMacros);
+    expect(normalize(layout.layers)).toEqual(normalize(orcaEchoComboSampleLayers));
+    console.log(
+      `取得: コンボ${layout.combos.length}件(${layout.combos.map((c) => `${c.elementIds.join("+")}→${c.label}`).join(", ")}) / マクロ${layout.macros.length}件`
+    );
+  });
+
+  it("工場出荷時配列(コンボ・マクロなし)は空の一覧で取得される", async () => {
+    const layout = await getLayoutBySlug(FACTORY_DEFAULT_SLUG);
+    expect(layout?.combos).toEqual([]);
+    expect(layout?.macros).toEqual([]);
+  });
+
+  it("キー以外を含むコンボは保存前に拒否され、DBに何も残らない", async () => {
+    const slug = "reject-test-combo";
+    await expect(
+      createLayout(
+        { ...comboSampleInput, combos: [{ elementIds: ["R-1-2", "R-TRACKBALL"], label: "x" }] },
+        { slug }
+      )
+    ).rejects.toThrow("コンボの検証エラー");
+    expect(await getLayoutBySlug(slug)).toBeNull();
   });
 });
