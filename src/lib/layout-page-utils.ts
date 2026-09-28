@@ -40,3 +40,21 @@ export function parsePageParam(value: string | string[] | undefined): number | n
 export function totalPages(total: number, perPage = LAYOUTS_PER_PAGE): number {
   return Math.max(1, Math.ceil(total / perPage));
 }
+
+/**
+ * URLのタグ名を読む。URLエンコードされたまま渡ってきた場合も、デコード済みの場合も同じ結果にする。
+ * タグの長さの上限(20文字)を超える・空・不正なエンコードは null(= 404にする)。
+ */
+export function decodeTagParam(param: string): string | null {
+  let tag = param;
+  if (/%[0-9A-Fa-f]{2}/.test(tag)) {
+    try {
+      tag = decodeURIComponent(tag);
+    } catch {
+      return null;
+    }
+  }
+  tag = tag.trim();
+  if (tag.length === 0 || [...tag].length > 20) return null;
+  return tag;
+}

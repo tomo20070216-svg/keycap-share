@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findLayerByParam, formatDateJa, parsePageParam, totalPages } from "@/lib/layout-page-utils";
+import { decodeTagParam, findLayerByParam, formatDateJa, parsePageParam, totalPages } from "@/lib/layout-page-utils";
 import type { Layout } from "@/lib/schemas";
 
 const layout = {
@@ -49,5 +49,18 @@ describe("totalPages 総ページ数", () => {
     expect(totalPages(20)).toBe(1);
     expect(totalPages(21)).toBe(2);
     expect(totalPages(5, 2)).toBe(3);
+  });
+});
+
+describe("decodeTagParam URLのタグ名", () => {
+  it("エンコードされたままでも、デコード済みでも同じタグ名になる", () => {
+    expect(decodeTagParam(encodeURIComponent("工場出荷時"))).toBe("工場出荷時");
+    expect(decodeTagParam("工場出荷時")).toBe("工場出荷時");
+    expect(decodeTagParam("親指キー")).toBe("親指キー");
+  });
+  it("空・20文字を超える・不正なエンコードは null", () => {
+    expect(decodeTagParam("")).toBeNull();
+    expect(decodeTagParam("あ".repeat(21))).toBeNull();
+    expect(decodeTagParam("%E3%81")).toBeNull();
   });
 });
