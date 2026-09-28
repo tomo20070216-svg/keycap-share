@@ -236,10 +236,118 @@
       "phase": 2,
       "role": "planner",
       "task": "フェーズ1完了後、計画役がフェーズ2(キー図描画)の詳細タスクを追加する",
-      "status": "todo",
+      "status": "done",
       "passes": ["フェーズ2の詳細タスクが本ファイルに追加されている"],
-      "evidence": [],
+      "evidence": [
+        "人間と相談してP2-1〜P2-8を追加(2026-09-28)。人間の決定: 複数操作はタップを大きく長押しを下に小さく表示 / 割り当てなしのキーは空欄+薄い灰色 / 全レイヤーを縦に並べる / 座標は写真から推定し人間が実機で確認(定規での計測は不可) / コンボ・マクロはキー図の下に一覧表示し、コンボ対象キーに番号マークを付ける",
+        "評価役確認: フェーズ2の詳細タスク(P2-1〜P2-8)が本ファイルに追加され、それぞれにpassesがあることを確認した"
+      ],
       "dependencies": ["P1-4"]
+    },
+    {
+      "id": "P2-1",
+      "phase": 2,
+      "role": "executor",
+      "task": "技術検証: OGP画像の仕組み(ImageResponse/Satori)で、SVGのキー図に日本語の文字を描けるかを確認し、描き方を決める",
+      "status": "todo",
+      "passes": [
+        "SVGの<text>で描いた場合と、SVGの図形にHTMLの文字を重ねた場合のPNGが evidence/ に保存されている",
+        "どちらの描き方を採用するかの結論と理由が progress.md に記録されている"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-PLACEHOLDER"]
+    },
+    {
+      "id": "P2-2",
+      "phase": 2,
+      "role": "executor",
+      "task": "描画用データへの変換: 物理レイアウト+1レイヤーから、描く図形と文字の一覧を作る純粋関数",
+      "status": "todo",
+      "passes": [
+        "テストで全要素(49キー・ダイヤル・トラックボール・スクロールパッド2つ)が出力されることを確認している",
+        "テストで左右の間に隙間があることを確認している",
+        "テストで、キーのタップ(press)と長押し(hold)が別々の文字として出力され、割り当てのないキーが「空欄」として区別されることを確認している"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-1"]
+    },
+    {
+      "id": "P2-3",
+      "phase": 2,
+      "role": "executor",
+      "task": "キー図の部品 KeymapDiagram を作る(サーバーとブラウザの両方で動く形。状態を持たず、Tailwindを使わない)",
+      "status": "todo",
+      "passes": [
+        "npx tsc --noEmit と npm test が成功する",
+        "タップは大きく、長押しは下に小さく、割り当てなしは空欄+薄い灰色で描かれる(スクリーンショットで確認)"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-2"]
+    },
+    {
+      "id": "P2-4",
+      "phase": 2,
+      "role": "executor",
+      "task": "写真(docs/keyboards/orca-echo-photo.png)からOrca echoの座標(列ごとの段のずれ・親指キーとダイヤルの傾き・トラックボール/スクロールパッドの位置)を推定し、src/keyboards/orca-echo.ts を実物に近づける",
+      "status": "todo",
+      "passes": [
+        "推定した座標で描いたキー図のスクリーンショットを人間が実機と見比べ、確認した記録がある",
+        "人間の確認が取れるまで、orca-echo.ts の「仮の値」表記と isProvisional: true を維持している",
+        "既存のテスト(キー数・要素の位置など)が成功する"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-3"]
+    },
+    {
+      "id": "P2-5",
+      "phase": 2,
+      "role": "executor",
+      "task": "コンボ(複数キーの同時押し)とマクロ一覧のデータ設計: Zodスキーマ追加とSQL(supabase/migrations/0002)作成。Supabaseへの適用は人間の承認が必要",
+      "status": "todo",
+      "passes": [
+        "コンボ(対象の要素2つ以上・表示名・対象レイヤー)とマクロ(名前・説明)のZodスキーマとテストがある",
+        "SQLがローカルのPostgreSQLで検証され、人間の承認を得てSupabaseに適用されている",
+        "配列の保存・取得(layout-repository)がコンボ・マクロに対応し、結合テストで確認している"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-3"]
+    },
+    {
+      "id": "P2-6",
+      "phase": 2,
+      "role": "executor",
+      "task": "コンボ一覧・マクロ一覧の表示と、キー図上のコンボ対象キーへの番号マーク(①②…)",
+      "status": "todo",
+      "passes": [
+        "人間の実例(J+K→左クリック、K+L→右クリック、J+L→ホイールクリック)を使い、一覧と番号マークが表示されたスクリーンショットがある"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-4", "P2-5"]
+    },
+    {
+      "id": "P2-7",
+      "phase": 2,
+      "role": "executor",
+      "task": "確認用ページで、Supabaseから取得した工場出荷時配列の全レイヤーを縦に並べて表示する(フェーズ2の完了の目安)",
+      "status": "todo",
+      "passes": [
+        "全レイヤー(3レイヤー)が表示されたブラウザのスクリーンショットがある",
+        "左右分割が目で見て分かる"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-6"]
+    },
+    {
+      "id": "P2-8",
+      "phase": 2,
+      "role": "executor",
+      "task": "同じ KeymapDiagram 部品から、OGP用のPNG(1200×630)を生成できることを確認する(本番のOGPはフェーズ4)",
+      "status": "todo",
+      "passes": [
+        "画面表示と同じ部品から生成したPNGが evidence/ に保存され、日本語の文字が正しく描画されている"
+      ],
+      "evidence": [],
+      "dependencies": ["P2-7"]
     },
     {
       "id": "P3-PLACEHOLDER",
@@ -249,7 +357,7 @@
       "status": "todo",
       "passes": ["フェーズ3の詳細タスクが本ファイルに追加されている"],
       "evidence": [],
-      "dependencies": ["P2-PLACEHOLDER"]
+      "dependencies": ["P2-8"]
     },
     {
       "id": "P4-PLACEHOLDER",
