@@ -249,7 +249,7 @@
       "phase": 2,
       "role": "executor",
       "task": "技術検証: OGP画像の仕組み(ImageResponse/Satori)で、SVGのキー図に日本語の文字を描けるかを確認し、描き方を決める",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "SVGの<text>で描いた場合と、SVGの図形にHTMLの文字を重ねた場合のPNGが evidence/ に保存されている",
         "どちらの描き方を採用するかの結論と理由が progress.md に記録されている"
@@ -258,7 +258,8 @@
         "evidence/p2-1/verify.mjs でImageResponse(next/og)を使い検証(evidence/p2-1/README.md)",
         "方式A(SVGの<text>): PNGは生成されず「<text> nodes are not currently supported, please convert them to <path>」エラー。PNGの代わりにエラー文を記録した",
         "方式B(SVGの図形+HTMLの文字を重ねる): 成功。evidence/p2-1/B-svg-plus-html.png(日本語・タップ/長押しの2段表示とも正常)。傾いたキーも evidence/p2-1/C-rotated-key.png で成功",
-        "結論: 方式Bを採用(progress.mdに記録)"
+        "結論: 方式Bを採用(progress.mdに記録)",
+        "評価役確認: 方式BのPNGと結論の記録を確認。方式AはPNGが生成されないため、代わりにエラー文の記録で合格とすることを人間が承認した(2026-09-28)"
       ],
       "dependencies": ["P2-PLACEHOLDER"]
     },
@@ -267,13 +268,19 @@
       "phase": 2,
       "role": "executor",
       "task": "描画用データへの変換: 物理レイアウト+1レイヤーから、描く図形と文字の一覧を作る純粋関数",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "テストで全要素(49キー・ダイヤル・トラックボール・スクロールパッド2つ)が出力されることを確認している",
         "テストで左右の間に隙間があることを確認している",
         "テストで、キーのタップ(press)と長押し(hold)が別々の文字として出力され、割り当てのないキーが「空欄」として区別されることを確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/lib/keymap-render.ts に buildKeymapRenderModel を作成。左右は描画時に分けて配置し、元データの座標に関係なく指定の隙間(既定1キー分)を空ける",
+        "src/lib/__tests__/keymap-render.test.ts 9件成功: 全要素(49キー・ダイヤル1・トラックボール1・スクロールパッド2)の出力 / 隙間0.5・1・3で左右の間隔が一致 / 元データで左右が重なっても隙間が空く / press・holdが別々の文字 / 割り当てなしはisEmpty / キー以外の操作はextrasに決まった順 / 未知の要素は無視",
+        "誤りをわざと入れる確認: 右手の配置から隙間を消すと、隙間関連のテスト3件が失敗することを確認し、元に戻した",
+        "npm test 25件成功、npx tsc --noEmit・eslint 成功",
+        "評価役確認: passes 3条件をそれぞれ対応するテストの成功で確認した"
+      ],
       "dependencies": ["P2-1"]
     },
     {
