@@ -437,13 +437,20 @@
       "phase": 3,
       "role": "executor",
       "task": "配列ページ /k/[slug]: タイトル・機種名・投稿者名・説明・タグ・全レイヤーのキー図・コンボとマクロの一覧、各レイヤーページへのリンク",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "実際のURL(/k/orca-echo-factory-default など)で配列の全レイヤーが表示されるスクリーンショットがある",
         "存在しないslugは404になる",
         "ページはサーバー側で組み立てられ、JavaScriptなしのHTMLにタイトルとキー図の文字が含まれる(フェーズ4のメタタグの前提)"
       ],
-      "evidence": [],
+      "evidence": [
+        "配列ページ src/app/k/[slug]/page.tsx と共通部品 src/components/LayoutView.tsx を作成(タイトル・機種名・投稿者名・投稿日・説明・タグ・レイヤー切り替え・全レイヤー・コンボとマクロの一覧)",
+        "スクリーンショット: evidence/p3-2/k-orca-echo-factory-default.png(3レイヤー)、evidence/p3-2/k-orca-echo-combo-sample.png(コンボ・マクロ入り)",
+        "開発サーバーで /k/orca-echo-factory-default・/k/orca-echo-combo-sample は200、/k/no-such-slug は404",
+        "JavaScriptなしのHTML(curlで取得)に <title>Orca echo 工場出荷時配列…、「なぜこの配置にしたか」、キーの文字(Esc、2.4GHz)、「レイヤー1: fn1」が含まれることを確認",
+        "npm test 7ファイル55件成功(Test Files の行も確認)、npx tsc --noEmit、eslint 成功",
+        "評価役確認: passes 3条件を確認した"
+      ],
       "dependencies": [
         "P3-1"
       ]
@@ -453,12 +460,17 @@
       "phase": 3,
       "role": "executor",
       "task": "レイヤーページ /k/[slug]/[レイヤー番号]: 指定したレイヤーを大きく表示し、ほかのレイヤーへ切り替えるリンクを置く",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "3レイヤーすべてのURL(/k/.../0, /1, /2)で表示されるスクリーンショットがある",
         "存在しないレイヤー番号・数字でない値は404になる"
       ],
-      "evidence": [],
+      "evidence": [
+        "レイヤーページ src/app/k/[slug]/[layer]/page.tsx を作成。URLのレイヤー番号は src/lib/layout-page-utils.ts の findLayerByParam で判定(数字のみ・先頭0なし・存在する番号だけ)。テスト2件",
+        "スクリーンショット: evidence/p3-3/k-orca-echo-factory-default-0.png・-1.png・-2.png(選択中のレイヤーが強調される)",
+        "/k/orca-echo-factory-default/0・/1・/2 は200、/3・/abc・/01 は404",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P3-2"
       ]
