@@ -198,7 +198,7 @@
       "phase": 1,
       "role": "executor",
       "task": "Supabaseにkeyboards/layouts/layers/assignments/tags/layout_tagsテーブルを作成する(マイグレーション適用。docs/safety.mdにより人間の承認が必要)",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "テーブル定義(SQL)が作成され、人間の承認を得てSupabaseに適用されている",
         "編集用秘密キーは平文で保存せず、ハッシュ化して保存する設計になっている"
@@ -207,7 +207,9 @@
         "人間が計画(7テーブル、秘密キーハッシュは別テーブルlayout_secrets、RLSで読み取り専用、書き込みはサーバー側のみ)を承認(2026-09-28)",
         "supabase/migrations/0001_init.sql を作成。編集用秘密キーはSHA-256ハッシュのみをlayout_secretsに保存し、CHECK制約で64桁hex以外(平文など)を拒否する",
         "ローカルのPostgreSQL 17.6一時DBで適用・検証済み: 不正action・平文キーの拒否、anonからのlayout_secrets読み取りと書き込みの拒否、公開テーブルの読み取り可、updated_at自動更新、カスケード削除を確認(evidence/P1-3-local-migration-test.md)",
-        "未完了: Supabaseへの適用(人間がSQL Editorで実行する)"
+        "人間がSupabaseのSQL Editorで0001_init.sqlを実行し「Success. No rows returned」を確認(2026-09-28)",
+        "公開用キーでの確認: 公開テーブル6つは読み取り可、layout_secretsの読み取りとtagsへの書き込みは42501 permission deniedで拒否(evidence/P1-3-supabase-applied.md)",
+        "評価役確認: passes 2条件(SQL作成・人間の承認を得て適用済み / 秘密キーはハッシュのみ保存しブラウザから読めない)を上記の実行結果で確認した"
       ],
       "dependencies": ["P1-2"]
     },

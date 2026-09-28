@@ -206,3 +206,15 @@
 - 新しいセッションで引き継ぎました。AGENTS.md 4章の手順に従い safety.md / progress.md / tasks.json を確認。
 - `in_progress` のタスクはなし。依存が満たされた最小IDの `todo` は `P1-3`(Supabaseテーブル作成。マイグレーション適用に人間の承認が必要)。
 - 作業ツリーに `package-lock.json` の未コミット変更あり(`@emnapi/*` の追加や `peer` フラグの変化。別PCでの `npm install` によるものと推測)。内容は人間に確認する。
+
+---
+
+## 2026-09-28 — P1-3完了: Supabaseにテーブルを作成(計画役/実行役 → 評価役)
+
+- 人間の承認を得た計画に沿って `supabase/migrations/0001_init.sql` を作成(keyboards / layouts / layout_secrets / layers / assignments / tags / layout_tags)。
+- 編集用秘密キーはSHA-256ハッシュのみを別テーブル `layout_secrets` に保存し、ブラウザからは一切読めない。全テーブルでRLSを有効にし、ブラウザは読み取りのみ。書き込みは今後サーバー側(secret key)から行う。
+- このPCのPostgreSQL 17.6の一時DBで事前検証してから(`evidence/P1-3-local-migration-test.md`)、人間がSupabaseのSQL Editorで実行(「Success. No rows returned」)。
+- 公開用キーでアクセスし、公開テーブル6つの読み取り可、`layout_secrets` の読み取りと書き込みの拒否を確認(`evidence/P1-3-supabase-applied.md`)。評価役として `P1-3` を `done` にした。
+- 人間から「チャットは日本語で返答してほしい」と指摘を受けた。
+
+**学び**: ローカルにPostgreSQLがあれば、本番に適用する前にSQLの文法・制約・権限を一時DBで検証できる。人間に本番で実行してもらう前にこれを挟むと、失敗したときの手戻りを防げる。また、tasks.jsonをプログラムで書き換えると整形が変わって差分が膨らむため、既存ファイルは部分的に編集する。
