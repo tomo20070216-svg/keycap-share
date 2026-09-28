@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import { KeymapDiagram, getKeymapDiagramSize } from "@/components/KeymapDiagram";
+import { ComboMacroList } from "@/components/ComboMacroList";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { orcaEcho } from "@/keyboards/orca-echo";
-import { orcaEchoFactoryDefaultLayers } from "@/keyboards/orca-echo-factory-default";
+import {
+  orcaEchoComboSampleCombos,
+  orcaEchoComboSampleLayers,
+  orcaEchoComboSampleMacros,
+} from "@/keyboards/orca-echo-combo-sample";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
 import type { Layer } from "@/lib/schemas";
 
 /**
- * 開発用の確認ページ(P2-3)。キー図の部品の見た目を確認する。
- * Supabaseは使わず、コード内のデータだけで描く。
+ * 開発用の確認ページ(P2-3, P2-6)。キー図の部品の見た目を確認する。
+ * Supabaseは使わず、コード内のデータ(コンボのサンプル配列 + 表示確認用のテストレイヤー)だけで描く。
  */
 
 export const metadata: Metadata = {
@@ -43,7 +48,7 @@ const sampleLayer: Layer = {
   ],
 };
 
-const layers = [...orcaEchoFactoryDefaultLayers, sampleLayer];
+const layers = [...orcaEchoComboSampleLayers, sampleLayer];
 
 export default function KeymapDevPage() {
   return (
@@ -57,11 +62,17 @@ export default function KeymapDevPage() {
               レイヤー{layer.layerNumber}: {layer.layerName}
             </h2>
             <ResponsiveKeymap width={size.width} height={size.height}>
-              <KeymapDiagram physicalLayout={orcaEcho} layer={layer} />
+              <KeymapDiagram physicalLayout={orcaEcho} layer={layer} combos={orcaEchoComboSampleCombos} />
             </ResponsiveKeymap>
           </section>
         );
       })}
+      <ComboMacroList
+        physicalLayout={orcaEcho}
+        layers={layers}
+        combos={orcaEchoComboSampleCombos}
+        macros={orcaEchoComboSampleMacros}
+      />
     </main>
   );
 }

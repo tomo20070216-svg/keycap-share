@@ -218,3 +218,33 @@ describe("要素の外側に置く文字(ダイヤル・トラックボール)",
     expect(model.outsideLabels).toEqual([]);
   });
 });
+
+describe("コンボの番号", () => {
+  const combos = [
+    { elementIds: ["R-1-2", "R-1-3"], label: "左クリック", layerNumbers: [] },
+    { elementIds: ["R-1-3", "R-1-4"], label: "右クリック", layerNumbers: [] },
+    { elementIds: ["R-1-2", "R-1-4"], label: "ホイールクリック", layerNumbers: [] },
+    { elementIds: ["L-1-1", "L-1-2"], label: "fn1だけ", layerNumbers: [1] },
+  ];
+
+  it("対象キーに、一覧の並び順(1始まり)の番号が付く。複数のコンボに入るキーは番号が複数", () => {
+    const model = buildKeymapRenderModel(orcaEcho, baseLayer, { combos });
+    expect(item(model.items, "R-1-2").comboNumbers).toEqual([1, 3]); // J
+    expect(item(model.items, "R-1-3").comboNumbers).toEqual([1, 2]); // K
+    expect(item(model.items, "R-1-4").comboNumbers).toEqual([2, 3]); // L
+    expect(item(model.items, "R-1-1").comboNumbers).toEqual([]); // H
+  });
+
+  it("対象レイヤーを指定したコンボは、そのレイヤーでだけ番号が付く。番号自体はレイヤーによって変わらない", () => {
+    const base = buildKeymapRenderModel(orcaEcho, baseLayer, { combos });
+    const fn1 = buildKeymapRenderModel(orcaEcho, fn1Layer, { combos });
+    expect(item(base.items, "L-1-1").comboNumbers).toEqual([]);
+    expect(item(fn1.items, "L-1-1").comboNumbers).toEqual([4]);
+    expect(item(fn1.items, "R-1-2").comboNumbers).toEqual([1, 3]);
+  });
+
+  it("コンボを渡さなければ番号は付かない", () => {
+    const model = buildKeymapRenderModel(orcaEcho, baseLayer);
+    expect(model.items.every((i) => i.comboNumbers.length === 0)).toBe(true);
+  });
+});

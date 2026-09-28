@@ -6,7 +6,7 @@ import {
   type RenderLabel,
 } from "@/lib/keymap-render";
 import { fitFontSize, fitLabel } from "@/lib/label-fit";
-import type { ElementType, KeyboardPhysicalLayout, Layer } from "@/lib/schemas";
+import type { Combo, ElementType, KeyboardPhysicalLayout, Layer } from "@/lib/schemas";
 
 /**
  * キー図の描画部品(画面表示とOGP画像で共用。plan.md 方針3)。
@@ -28,6 +28,8 @@ export type KeymapDiagramProps = {
   unit?: number;
   /** 左右の隙間(キー単位) */
   splitGap?: number;
+  /** 配列のコンボ。このレイヤーで有効なものの対象キーに番号(①②…)を付ける */
+  combos?: Combo[];
   fontFamily?: string;
 };
 
@@ -42,6 +44,8 @@ const COLORS = {
   secondaryText: "#a1a1aa",
   emptyDeviceText: "#71717a",
   outsideText: "#3f3f46",
+  comboBadge: "#2563eb",
+  comboBadgeText: "#ffffff",
 };
 
 const ELEMENT_TYPE_NAMES: Record<ElementType, string> = {
@@ -65,6 +69,8 @@ const ACTION_SYMBOLS: Record<RenderLabel["action"], string> = {
 };
 
 const LABEL_STACK: CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center" };
+
+const comboBadgeSize = (unit: number) => unit * 0.27;
 
 /** 図全体の余白(キー単位) */
 const PADDING = 0.3;
@@ -238,14 +244,82 @@ function OutsideLabels({ model, unit, fontFamily }: { model: KeymapRenderModel; 
   );
 }
 
+/**
+ * コンボの番号の丸。フォントの丸数字(①など)はOGP画像用フォントで欠けるおそれがあるため、
+ * 丸は図形(borderRadius)で描き、中に数字を置く。キーの内側の右上に置き、キーは青い枠線で囲む
+ * (キーの外にはみ出すと、上の段のキーの番号と紛らわしいため)。番号のあるキーは文字を少し下げる。
+ */
+export function ComboNumberBadge({ number, size, fontFamily }: { number: number; size: number; fontFamily: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: COLORS.comboBadge,
+        border: `${Math.max(1, size * 0.08)}px solid #ffffff`,
+        color: COLORS.comboBadgeText,
+        fontSize: size * 0.62,
+        fontWeight: 700,
+        lineHeight: 1,
+        fontFamily,
+      }}
+    >
+      {String(number)}
+    </div>
+  );
+}
+
+function ComboBadges({ model, unit, fontFamily }: { model: KeymapRenderModel; unit: number; fontFamily: string }) {
+  const size = comboBadgeSize(unit);
+  return (
+    <>
+      {model.items
+        .filter((item) => item.comboNumbers.length > 0)
+        .map((item) => {
+          const b = box(item, unit);
+          const count = item.comboNumbers.length;
+          return (
+            <div
+              key={item.elementId}
+              style={{
+                position: "absolute",
+                left: b.left + b.width - count * size * 0.9 - size * 0.12,
+                top: b.top + size * 0.15,
+                display: "flex",
+                // 傾いたキーでは、番号もキーと一緒に傾ける(回転の中心をキーの中心に合わせる)
+                ...(item.rotation
+                  ? {
+                      transform: `rotate(${item.rotation}deg)`,
+                      transformOrigin: `${b.left + b.width / 2 - (b.left + b.width - count * size * 0.9 - size * 0.12)}px ${b.top + b.height / 2 - (b.top + size * 0.15)}px`,
+                    }
+                  : {}),
+              }}
+            >
+              {item.comboNumbers.map((n) => (
+                <div key={n} style={{ display: "flex", marginLeft: -size * 0.1 }}>
+                  <ComboNumberBadge number={n} size={size} fontFamily={fontFamily} />
+                </div>
+              ))}
+            </div>
+          );
+        })}
+    </>
+  );
+}
+
 export function KeymapDiagram({
   physicalLayout,
   layer,
   unit = DEFAULT_UNIT,
   splitGap,
+  combos,
   fontFamily = "'Noto Sans JP', sans-serif",
 }: KeymapDiagramProps) {
-  const model = buildKeymapRenderModel(physicalLayout, layer, { splitGap });
+  const model = buildKeymapRenderModel(physicalLayout, layer, { splitGap, combos });
   const size = getKeymapDiagramSize(model, unit);
 
   return (
@@ -278,8 +352,8 @@ export function KeymapDiagram({
               height={b.height}
               rx={cornerRadius(item, b.width, b.height, unit)}
               fill={fill(item)}
-              stroke={item.isEmpty ? COLORS.emptyStroke : "none"}
-              strokeWidth={item.isEmpty ? 1 : 0}
+              stroke={item.comboNumbers.length > 0 ? COLORS.comboBadge : item.isEmpty ? COLORS.emptyStroke : "none"}
+              strokeWidth={item.comboNumbers.length > 0 ? Math.max(2, unit * 0.04) : item.isEmpty ? 1 : 0}
               transform={item.rotation ? `rotate(${item.rotation} ${cx} ${cy})` : undefined}
             />
           );
@@ -301,6 +375,8 @@ export function KeymapDiagram({
             justifyContent: "center",
             textAlign: "center",
             fontWeight: 700,
+            // コンボの番号(右上)と文字が重ならないよう、番号のあるキーは文字を少し下げる
+            ...(item.comboNumbers.length > 0 ? { paddingTop: comboBadgeSize(unit) * 0.7 } : {}),
             // Satori は値が undefined のプロパティでもエラーになるため、回転があるときだけ付ける
             ...(item.rotation ? { transform: `rotate(${item.rotation}deg)` } : {}),
           };
@@ -315,6 +391,7 @@ export function KeymapDiagram({
           );
         })}
       <OutsideLabels model={model} unit={unit} fontFamily={fontFamily} />
+      <ComboBadges model={model} unit={unit} fontFamily={fontFamily} />
     </div>
   );
 }

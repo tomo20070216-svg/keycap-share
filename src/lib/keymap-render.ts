@@ -1,6 +1,7 @@
 import {
   ELEMENT_ACTIONS,
   type Action,
+  type Combo,
   type ElementType,
   type KeyboardPhysicalLayout,
   type Layer,
@@ -39,6 +40,8 @@ export type RenderItem = {
   isEmpty: boolean;
   /** 工場出荷時の印字(参考情報) */
   legend?: string;
+  /** このキーが含まれるコンボの番号(1始まり。コンボ一覧の①②…と対応) */
+  comboNumbers: number[];
 };
 
 export type KeymapRenderModel = {
@@ -72,7 +75,17 @@ export type OutsideLabel = {
 export type KeymapRenderOptions = {
   /** 左手と右手の間の隙間(キー単位) */
   splitGap?: number;
+  /**
+   * 配列のコンボ。このレイヤーで有効なもの(対象レイヤーが空=全レイヤー共通、またはこのレイヤーを含む)
+   * の対象キーに番号を付ける。番号は配列全体での並び順(1始まり)で、レイヤーによって変わらない。
+   */
+  combos?: Combo[];
 };
+
+/** そのレイヤーで有効なコンボか(対象レイヤーが空なら全レイヤー共通) */
+export function isComboActiveOnLayer(combo: Combo, layerNumber: number): boolean {
+  return combo.layerNumbers.length === 0 || combo.layerNumbers.includes(layerNumber);
+}
 
 const DEFAULT_SPLIT_GAP = 1;
 
@@ -94,6 +107,15 @@ export function buildKeymapRenderModel(
   options: KeymapRenderOptions = {}
 ): KeymapRenderModel {
   const splitGap = options.splitGap ?? DEFAULT_SPLIT_GAP;
+
+  // 要素ID → この要素が含まれる(このレイヤーで有効な)コンボの番号
+  const comboNumbersById = new Map<string, number[]>();
+  (options.combos ?? []).forEach((combo, index) => {
+    if (!isComboActiveOnLayer(combo, layer.layerNumber)) return;
+    for (const id of combo.elementIds) {
+      comboNumbersById.set(id, [...(comboNumbersById.get(id) ?? []), index + 1]);
+    }
+  });
 
   // 要素ID+操作 → 表示名(物理レイアウトにない要素への割り当ては無視する)
   const labels = new Map<string, string>();
@@ -148,6 +170,7 @@ export function buildKeymapRenderModel(
       extras,
       isEmpty: primary === null && secondary === null && extras.length === 0,
       legend: el.legend,
+      comboNumbers: comboNumbersById.get(el.id) ?? [],
     };
   });
 

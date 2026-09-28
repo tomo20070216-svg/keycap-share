@@ -352,11 +352,16 @@
       "phase": 2,
       "role": "executor",
       "task": "コンボ一覧・マクロ一覧の表示と、キー図上のコンボ対象キーへの番号マーク(①②…)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "人間の実例(J+K→左クリック、K+L→右クリック、J+L→ホイールクリック)を使い、一覧と番号マークが表示されたスクリーンショットがある"
       ],
-      "evidence": [],
+      "evidence": [
+        "描画用データにコンボの番号(comboNumbers)を追加し、KeymapDiagram で対象キーを青い枠線+内側右上の番号の丸で表示。一覧は src/components/ComboMacroList.tsx",
+        "スクリーンショット evidence/p2-6/dev-keymap-desktop.png(人間の実例のコンボ3つ: J=1・3、K=1・2、L=2・3 の番号と一覧、マクロ「署名」の一覧)。OGP画像でも表示を確認 evidence/p2-6/og-preview-combos.png",
+        "npm test 52件成功、npx tsc --noEmit・eslint・npm run build 成功(evidence/p2-6/README.md)",
+        "評価役確認: passesの条件(実例を使った一覧と番号マークのスクリーンショット)を確認した"
+      ],
       "dependencies": ["P2-4", "P2-5"]
     },
     {
