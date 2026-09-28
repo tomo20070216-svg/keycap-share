@@ -369,12 +369,17 @@
       "phase": 2,
       "role": "executor",
       "task": "確認用ページで、Supabaseから取得した工場出荷時配列の全レイヤーを縦に並べて表示する(フェーズ2の完了の目安)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "全レイヤー(3レイヤー)が表示されたブラウザのスクリーンショットがある",
         "左右分割が目で見て分かる"
       ],
-      "evidence": [],
+      "evidence": [
+        "確認ページ /dev/layouts/[slug] を作成。Supabaseから公開用キーで配列と機種を取得し、全レイヤーを縦に並べて表示(コンボ・マクロ一覧も表示)。存在しないslugは404",
+        "スクリーンショット: evidence/p2-7/orca-echo-factory-default.png(3レイヤー)、evidence/p2-7/orca-echo-combo-sample.png(3レイヤー+コンボ・マクロ)。左右分割が隙間で分かる",
+        "npm test 52件、npx tsc --noEmit、eslint、npm run build 成功(evidence/p2-7/README.md)",
+        "評価役確認: passes 2条件(全レイヤーのスクリーンショット / 左右分割が分かる)と evals/acceptance.md フェーズ2の確認方法を満たすことを確認した"
+      ],
       "dependencies": ["P2-6"]
     },
     {
