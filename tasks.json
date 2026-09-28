@@ -20,12 +20,16 @@
       "phase": 0,
       "role": "executor",
       "task": "現在の git リポジトリ構成(ホームフォルダがルートになっている問題)について、人間に対応方針を確認する。対応案: (a) このプロジェクトフォルダ内で新規に git init して独立リポジトリにする, (b) 現状のまま使う, (c) その他",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "対応方針が人間から明示され、progress.mdに記録されている",
         "方針(a)を選んだ場合、新しい独立リポジトリが作成され、無関係なファイルが含まれていないことをgit statusで確認できる"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間が方針(a)『このフォルダ内に新しい独立リポジトリを作る』を選択(2026-09-28)",
+        "git init 実行後、git status で無関係ファイルが含まれていないことを確認(untrackedなのはスクリーンショット1点のみ、ハーネス関連ではないため未コミット)",
+        "初回コミット eb71606 にハーネス一式(.gitignore, AGENTS.md, CLAUDE.md, docs/, evals/, plan.md, progress.md, tasks.json)のみを含めてコミット"
+      ],
       "dependencies": []
     },
     {
