@@ -218,11 +218,17 @@
       "phase": 1,
       "role": "executor",
       "task": "仮のOrca echoデータを使い、配列(layout)を1件保存し、取得できることを確認する(フェーズ1の完了の目安)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "仮の配列データをSupabaseに保存し、APIまたはテストコードで取得できることを確認した証拠がある"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間が計画を承認。工場出荷時配列はテスト後も「最初の1件」としてDBに残す方針(A案)に決定(2026-09-28)",
+        "src/lib/layout-repository.ts(saveKeyboard / createLayout / getLayoutBySlug)、src/lib/edit-secret.ts、src/lib/supabase-server.ts を作成。書き込みはsecret key、読み取りは公開用キーで行う",
+        "npm run test:integration: 3件成功。工場出荷時配列(3レイヤー・割り当て76件)を固定slug orca-echo-factory-default で保存し、公開用キーで取得した内容が元データと完全一致。新規保存時に layout_secrets がハッシュのみであることも検証(evidence/P1-4-save-and-fetch.md)",
+        "npm test 16件成功、npx tsc --noEmit・eslint・npm run build 成功",
+        "評価役確認: passesの条件を上記の実行結果で確認。evals/acceptance.mdの追加確認(src/keyboards/orca-echo.ts 冒頭の「仮の値」コメント)も確認した"
+      ],
       "dependencies": ["P1-3"]
     },
     {
