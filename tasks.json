@@ -567,10 +567,118 @@
       "phase": 4,
       "role": "planner",
       "task": "フェーズ3完了後、計画役がフェーズ4(OGP画像と共有・最重要)の詳細タスクを追加する",
-      "status": "todo",
+      "status": "done",
       "passes": ["フェーズ4の詳細タスクが本ファイルに追加されている"],
-      "evidence": [],
+      "evidence": [
+        "人間と相談してP4-1〜P4-7を追加(2026-09-29)。人間の決定: 共有する文面はサイト側の編集欄で直せるようにする / 最後の確認はXの投稿画面でカードのプレビューを見る(投稿するかは人間が判断) / 投稿者名がない配列の画像では投稿者名の欄を表示しない",
+        "評価役確認: フェーズ4の詳細タスク(P4-1〜P4-7)が追加され、それぞれにpassesがあることを確認した"
+      ],
       "dependencies": ["P3-7"]
+    },
+    {
+      "id": "P4-1",
+      "phase": 4,
+      "role": "executor",
+      "task": "技術検証: Vercel上(プレビューデプロイ)で、ImageResponse と日本語フォント(5.3MB)が動くか、500KBの制限・生成時間を確かめ、フォントの持ち方(丸ごと / 使う文字だけに絞る)を決める。プレビューデプロイは本番ではないが、結果は人間に報告する",
+      "status": "todo",
+      "passes": [
+        "プレビューデプロイで生成したOGP画像(日本語入り)が evidence/ に保存されている",
+        "フォントの持ち方の結論と理由が progress.md に記録されている"
+      ],
+      "evidence": [],
+      "dependencies": [
+        "P4-PLACEHOLDER"
+      ]
+    },
+    {
+      "id": "P4-2",
+      "phase": 4,
+      "role": "executor",
+      "task": "OGP画像: 配列ページ用(通常レイヤー)とレイヤーページ用(そのレイヤー)。キー配置図・タイトル・機種名・投稿者名(ない場合は表示しない)を入れ、画面と同じ KeymapDiagram 部品を使う",
+      "status": "todo",
+      "passes": [
+        "1200×630の画像に、キー配置図・タイトル・機種名・投稿者名が入っている(画像ファイル)",
+        "投稿者名がない配列では投稿者名の欄が表示されない",
+        "キー図の部品は画面表示と共用(plan.md 方針3)"
+      ],
+      "evidence": [],
+      "dependencies": [
+        "P4-1"
+      ]
+    },
+    {
+      "id": "P4-3",
+      "phase": 4,
+      "role": "executor",
+      "task": "メタタグ: 配列ページ・レイヤーページで twitter:card(summary_large_image)・og:title・og:description・og:image・og:url などをサーバー側で出力する。画像のURLに更新日時を含め、編集後にXの古い画像が残りにくくする",
+      "status": "todo",
+      "passes": [
+        "JavaScriptなしのHTMLソースに twitter:card=summary_large_image、og:title、og:image(絶対URL)などが含まれることを確認している",
+        "og:image のURLを開くと画像が返る"
+      ],
+      "evidence": [],
+      "dependencies": [
+        "P4-2"
+      ]
+    },
+    {
+      "id": "P4-4",
+      "phase": 4,
+      "role": "executor",
+      "task": "Xの共有ボタン: サイト側に文面の編集欄(初期値: タイトル・機種名・URL・ハッシュタグ #OrcaEcho #分割キーボード)を置き、ボタンでXの投稿画面(Web Intent)をその文面で開く。Xの開発者アカウントやAPIは使わない",
+      "status": "todo",
+      "passes": [
+        "編集欄の初期値が docs/voice.md の方針どおりである",
+        "編集した文面でXの投稿画面が開くことを確認している(投稿画面のスクリーンショット。投稿はしない)"
+      ],
+      "evidence": [],
+      "dependencies": [
+        "P4-3"
+      ]
+    },
+    {
+      "id": "P4-5",
+      "phase": 4,
+      "role": "executor",
+      "task": "「画像をダウンロード」「画像をコピー」の機能。コピーに対応していないブラウザでは、その旨と代わりの方法を表示する",
+      "status": "todo",
+      "passes": [
+        "ダウンロードしたファイルが1200×630のPNGであることを確認している",
+        "コピーが動くことを確認している、または対応していない環境での表示を確認している"
+      ],
+      "evidence": [],
+      "dependencies": [
+        "P4-4"
+      ]
+    },
+    {
+      "id": "P4-6",
+      "phase": 4,
+      "role": "executor",
+      "task": "Xのカード画像のキャッシュについての注意書きを画面に表示する(docs/voice.md の文例)",
+      "status": "todo",
+      "passes": [
+        "共有ボタンの近くに注意書きが表示されているスクリーンショットがある"
+      ],
+      "evidence": [],
+      "dependencies": [
+        "P4-5"
+      ]
+    },
+    {
+      "id": "P4-7",
+      "phase": 4,
+      "role": "reviewer",
+      "task": "評価役が evals/acceptance.md フェーズ4の確認方法で確認する(フェーズ4の完了の目安)。人間がXの投稿画面でカードのプレビュー(画像つき)を確認する。実際の投稿は人間が判断して行う",
+      "status": "todo",
+      "passes": [
+        "本番のHTMLソースの該当箇所、生成されたOGP画像、Xでのカードのプレビューのスクリーンショットがそろっている",
+        "本番への反映(push)は人間の承認を得てから行っている"
+      ],
+      "evidence": [],
+      "dependencies": [
+        "P4-6"
+      ]
     },
     {
       "id": "P5-PLACEHOLDER",
@@ -580,7 +688,7 @@
       "status": "todo",
       "passes": ["フェーズ5の詳細タスクが本ファイルに追加されている"],
       "evidence": [],
-      "dependencies": ["P4-PLACEHOLDER"]
+      "dependencies": ["P4-7"]
     },
     {
       "id": "P6-PLACEHOLDER",
