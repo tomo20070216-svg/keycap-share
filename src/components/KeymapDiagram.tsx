@@ -6,7 +6,7 @@ import {
   type RenderLabel,
 } from "@/lib/keymap-render";
 import { fitFontSize, fitLabel } from "@/lib/label-fit";
-import type { Combo, ElementType, KeyboardPhysicalLayout, Layer } from "@/lib/schemas";
+import type { Combo, ElementType, KeyboardPhysicalLayout, Layer, Side } from "@/lib/schemas";
 
 /**
  * キー図の描画部品(画面表示とOGP画像で共用。plan.md 方針3)。
@@ -30,6 +30,8 @@ export type KeymapDiagramProps = {
   splitGap?: number;
   /** 配列のコンボ。このレイヤーで有効なものの対象キーに番号(①②…)を付ける */
   combos?: Combo[];
+  /** 片側だけを描く(スマホ表示で左手・右手を縦に並べるとき) */
+  side?: Side;
   fontFamily?: string;
 };
 
@@ -317,9 +319,10 @@ export function KeymapDiagram({
   unit = DEFAULT_UNIT,
   splitGap,
   combos,
+  side,
   fontFamily = "'Noto Sans JP', sans-serif",
 }: KeymapDiagramProps) {
-  const model = buildKeymapRenderModel(physicalLayout, layer, { splitGap, combos });
+  const model = buildKeymapRenderModel(physicalLayout, layer, { splitGap, combos, side });
   const size = getKeymapDiagramSize(model, unit);
 
   return (

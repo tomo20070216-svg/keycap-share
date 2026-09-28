@@ -80,6 +80,11 @@ export type KeymapRenderOptions = {
    * の対象キーに番号を付ける。番号は配列全体での並び順(1始まり)で、レイヤーによって変わらない。
    */
   combos?: Combo[];
+  /**
+   * 片側だけを描く(スマホなど狭い画面で、左手と右手を縦に並べるため)。
+   * 指定すると、その側の要素だけを含む図になり、左右の隙間は入らない。
+   */
+  side?: Side;
 };
 
 /** そのレイヤーで有効なコンボか(対象レイヤーが空なら全レイヤー共通) */
@@ -123,7 +128,12 @@ export function buildKeymapRenderModel(
     labels.set(`${a.elementId}:${a.action}`, a.label);
   }
 
-  const boxes = physicalLayout.elements.map((el) => ({ el, box: boundingBox(el) }));
+  const elements = options.side
+    ? physicalLayout.elements.filter((el) => el.side === options.side)
+    : physicalLayout.elements;
+  // 片側だけを描くときは、左右の隙間を入れない
+  const gap = options.side ? 0 : splitGap;
+  const boxes = elements.map((el) => ({ el, box: boundingBox(el) }));
   const minY = Math.min(...boxes.map((b) => b.box.minY));
 
   // 左右それぞれの範囲を求め、左手を x=0 から、右手を「左手の右端 + 隙間」から並べる
@@ -141,10 +151,10 @@ export function buildKeymapRenderModel(
   const rightWidth = right.maxX - right.minX;
   const offsetX: Record<Side, number> = {
     left: -left.minX,
-    right: leftWidth + splitGap - right.minX,
+    right: leftWidth + gap - right.minX,
   };
 
-  const items: RenderItem[] = physicalLayout.elements.map((el) => {
+  const items: RenderItem[] = elements.map((el) => {
     const get = (action: Action) => labels.get(`${el.id}:${action}`) ?? null;
     const isKey = el.type === "key";
     const primary = isKey ? get("press") : null;
@@ -189,7 +199,7 @@ export function buildKeymapRenderModel(
     height: allMaxY - allMinY,
     halves: {
       left: { x: -allMinX, width: leftWidth },
-      right: { x: leftWidth + splitGap - allMinX, width: rightWidth },
+      right: { x: leftWidth + gap - allMinX, width: rightWidth },
     },
     items: items.map(shift),
     outsideLabels: outsideLabels.map(shift),

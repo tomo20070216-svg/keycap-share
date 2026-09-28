@@ -101,7 +101,11 @@ export function LayerSection({
   /** 見出しをレイヤーページへのリンクにする */
   headingLink?: boolean;
 }) {
-  const size = getKeymapDiagramSize(buildKeymapRenderModel(keyboard, layer, { combos: layout.combos }));
+  const size = (side?: "left" | "right") =>
+    getKeymapDiagramSize(buildKeymapRenderModel(keyboard, layer, { combos: layout.combos, side }));
+  const both = size();
+  const left = size("left");
+  const right = size("right");
   const heading = `レイヤー${layer.layerNumber}: ${layer.layerName}`;
   return (
     <section className="flex flex-col gap-2">
@@ -114,9 +118,27 @@ export function LayerSection({
           heading
         )}
       </h2>
-      <ResponsiveKeymap width={size.width} height={size.height}>
-        <KeymapDiagram physicalLayout={keyboard} layer={layer} combos={layout.combos} />
-      </ResponsiveKeymap>
+      {/* 広い画面: 左右を並べた1枚の図 */}
+      <div className="hidden md:block">
+        <ResponsiveKeymap width={both.width} height={both.height}>
+          <KeymapDiagram physicalLayout={keyboard} layer={layer} combos={layout.combos} />
+        </ResponsiveKeymap>
+      </div>
+      {/* 狭い画面(スマホなど): 左手と右手を縦に並べ、文字を読める大きさにする */}
+      <div className="flex flex-col gap-3 md:hidden">
+        <div className="flex flex-col gap-1">
+          <div className="text-xs font-bold text-zinc-500">左手</div>
+          <ResponsiveKeymap width={left.width} height={left.height}>
+            <KeymapDiagram physicalLayout={keyboard} layer={layer} combos={layout.combos} side="left" />
+          </ResponsiveKeymap>
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="text-xs font-bold text-zinc-500">右手</div>
+          <ResponsiveKeymap width={right.width} height={right.height}>
+            <KeymapDiagram physicalLayout={keyboard} layer={layer} combos={layout.combos} side="right" />
+          </ResponsiveKeymap>
+        </div>
+      </div>
     </section>
   );
 }

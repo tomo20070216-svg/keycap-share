@@ -480,13 +480,18 @@
       "phase": 3,
       "role": "executor",
       "task": "スマホ表示: 狭い画面では左手と右手を縦に並べ、キーの文字を読める大きさにする(キー図の部品は1つのまま、表示する側を選べるようにする)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "幅390pxのスクリーンショットで、キーの文字が読める大きさで表示されている",
         "PC幅の表示が変わっていない(スクリーンショット)",
         "キー図の部品は画面とOGP画像で共用のまま(plan.md 方針3)"
       ],
-      "evidence": [],
+      "evidence": [
+        "描画用データに side オプション(片側だけを描く)を追加し、KeymapDiagram から指定できるようにした。キー図の部品は1つのまま。テスト3件追加(npm test 7ファイル58件成功)",
+        "LayerSection で、幅768px以上は左右を並べた1枚、未満は左手・右手を縦に並べて表示(CSSのみで切り替え)",
+        "スクリーンショット: evidence/p3-4/mobile-390-combo-sample-0.png(幅390pxのiframe。キーの文字・コンボの番号が読める)、evidence/p3-4/desktop-1100-combo-sample-0.png(PC幅は従来どおり)",
+        "評価役確認: passes 3条件を確認した"
+      ],
       "dependencies": [
         "P3-3"
       ]

@@ -248,3 +248,46 @@ describe("コンボの番号", () => {
     expect(model.items.every((i) => i.comboNumbers.length === 0)).toBe(true);
   });
 });
+
+describe("片側だけを描く(スマホ表示用)", () => {
+  it("左手だけ・右手だけにすると、その側の要素だけが入り、左端が0から始まる", () => {
+    for (const side of ["left", "right"] as const) {
+      const model = buildKeymapRenderModel(orcaEcho, baseLayer, { side });
+      const expected = orcaEcho.elements.filter((e) => e.side === side).length;
+      expect(model.items).toHaveLength(expected);
+      expect(model.items.every((i) => i.side === side)).toBe(true);
+      expect(Math.min(...model.items.map((i) => horizontalExtent(i).minX))).toBeCloseTo(0);
+      expect(Math.max(...model.items.map((i) => horizontalExtent(i).maxX))).toBeCloseTo(model.width);
+    }
+  });
+
+  it("片側の図の幅は、両側の図の幅から隙間ともう片側を引いたものと同じ", () => {
+    const both = buildKeymapRenderModel(orcaEcho, baseLayer, { splitGap: 1 });
+    const left = buildKeymapRenderModel(orcaEcho, baseLayer, { side: "left" });
+    const right = buildKeymapRenderModel(orcaEcho, baseLayer, { side: "right" });
+    expect(left.width).toBeCloseTo(both.halves.left.width);
+    expect(right.width).toBeCloseTo(both.halves.right.width);
+    expect(left.width + 1 + right.width).toBeCloseTo(both.width);
+  });
+
+  it("片側でも外側の文字(ダイヤル・トラックボール)はその側のものだけが入り、図の範囲内に収まる", () => {
+    const layer: Layer = {
+      layerNumber: 0,
+      layerName: "テスト",
+      assignments: [
+        { elementId: "L-DIAL", action: "cw", label: "音量+" },
+        { elementId: "R-TRACKBALL", action: "left", label: "戻る" },
+      ],
+    };
+    const left = buildKeymapRenderModel(orcaEcho, layer, { side: "left" });
+    const right = buildKeymapRenderModel(orcaEcho, layer, { side: "right" });
+    expect(left.outsideLabels.map((l) => l.elementId)).toEqual(["L-DIAL"]);
+    expect(right.outsideLabels.map((l) => l.elementId)).toEqual(["R-TRACKBALL"]);
+    for (const m of [left, right]) {
+      for (const l of m.outsideLabels) {
+        expect(l.x).toBeGreaterThanOrEqual(0);
+        expect(l.x + l.width).toBeLessThanOrEqual(m.width + 1e-9);
+      }
+    }
+  });
+});
