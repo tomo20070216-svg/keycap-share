@@ -42,11 +42,17 @@
       "phase": 0,
       "role": "executor",
       "task": "ImageResponseで日本語フォントが正しく表示できるかを小さく検証する(実装前検証)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "日本語を含むテスト画像が生成され、文字化けなく表示されているスクリーンショットまたは画像ファイルがevidenceにある"
       ],
-      "evidence": [],
+      "evidence": [
+        "Google FontsからNoto Sans JP Bold(TrueType, 5.3MB)を取得しpublic/fonts/NotoSansJP-Bold.ttfに配置。ライセンスはOFL(商用・再配布可)。public/fonts/LICENSE.mdに記録",
+        "src/app/api/og-test/route.tsx: next/ogのImageResponseで日本語(漢字・ひらがな・カタカナ・全角記号)を含む1200x630画像を生成するテストAPIを作成",
+        "npm run devでサーバー起動後、curl http://localhost:3000/api/og-testでHTTP 200・画像取得(36,756 bytes)を確認",
+        "生成画像を目視確認し、文字化けや豆腐(tofu)文字がないことを確認。evidence/p0-2/og-test-japanese.pngに保存",
+        "評価役確認: 保存された画像を確認し、「分割キーボード配列共有」「Keychron Orca echo — なぜこの配置にしたか」が正しく描画されていることを確認した"
+      ],
       "dependencies": ["P0-1"]
     },
     {

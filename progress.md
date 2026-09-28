@@ -64,6 +64,18 @@
 
 ---
 
+## 2026-09-28 — P0-2完了: 日本語OGP画像の試作(実行役 → 評価役)
+
+- Google FontsからNoto Sans JP Bold(OFLライセンス、TrueType, 5.3MB)を取得し `public/fonts/NotoSansJP-Bold.ttf` に配置。ライセンス情報を `public/fonts/LICENSE.md` に記録(取得元URLの正確なライセンス文書は未確認のため、公開前に再確認する注意書きを追加)。
+- `src/app/api/og-test/route.tsx` にテスト用のOGP画像生成APIを作成。`next/og` の `ImageResponse` に `fonts` オプションでNoto Sans JPを明示的に渡す方式(この方式でないとCJKがtofu文字化けする)。
+- `npm run dev` 起動後、`curl http://localhost:3000/api/og-test` でHTTP 200・1200×630のPNG(36,756 bytes)を取得。
+- 画像を目視確認し、「分割キーボード配列共有」「Keychron Orca echo — なぜこの配置にしたか」の漢字・ひらがな・カタカナ・全角記号が文字化けなく表示されていることを確認。`evidence/p0-2/og-test-japanese.png` に保存。
+- `tasks.json` の `P0-2` を `done` に更新。
+
+**学び**: `ImageResponse` は `fontFamily` を指定しただけではシステムフォントを使わず、`fonts` 配列でフォントデータ(ArrayBuffer/Buffer)を明示的に渡す必要がある。日本語フォントはファイルサイズが大きい(数MB)ため、本番では文字を絞ったサブセットフォントの使用を検討する余地がある(フェーズ4で判断)。
+
+---
+
 ## 2026-09-28 — P0-0 完了: 残りの回答(計画役 → 評価役)
 
 - 人間の回答:
