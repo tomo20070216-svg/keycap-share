@@ -253,6 +253,14 @@ export async function listLayouts(options: { page?: number; perPage?: number; ta
   if (layoutIds) query = query.in("id", layoutIds);
 
   const { data, error, count } = await query.returns<LayoutRow[]>();
+  if (error?.code === "PGRST103") {
+    // 件数を超えたページを指定した場合(Requested range not satisfiable)。空の一覧と総数を返す
+    let countQuery = supabase.from("layouts").select("id", { count: "exact", head: true }).eq("is_listed", true);
+    if (layoutIds) countQuery = countQuery.in("id", layoutIds);
+    const { count: totalCount, error: countError } = await countQuery;
+    if (countError) throw new Error(`配列の件数の取得に失敗しました: ${countError.message}`);
+    return { layouts: [], total: totalCount ?? 0 };
+  }
   if (error) throw new Error(`配列の一覧の取得に失敗しました: ${error.message}`);
   return { layouts: data.map(rowToLayout), total: count ?? 0 };
 }

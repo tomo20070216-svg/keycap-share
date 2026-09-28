@@ -501,7 +501,7 @@
       "phase": 3,
       "role": "executor",
       "task": "一覧ページ(新着順): トップ / に新しい順で配列をカード表示(タイトル・機種名・投稿者名・タグ・通常レイヤーの小さなキー図)し、多い場合はページを分ける。テスト用の配列を一覧に出さない印をDBに追加(supabase/migrations/0003。適用は人間の承認が必要)",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "一覧の取得処理のテスト(新しい順・ページ分け・一覧に出さない印の除外)が成功する",
         "0003がローカルのPostgreSQLで検証され、人間の承認を得てSupabaseに適用されている",
@@ -510,7 +510,11 @@
       "evidence": [
         "supabase/migrations/0003_layouts_is_listed.sql を作成(layouts.is_listed。初期値true、コンボのサンプル配列だけfalse)。ローカルPostgreSQLで0001・0002適用済みの状態に適用して検証(evidence/p3-5/local-migration-test.md)",
         "listLayouts(新着順・ページ分け・is_listedの除外・タグの絞り込み)とトップページ(カード一覧)を実装。ページ番号の判定のテスト(npm test 7ファイル61件成功)",
-        "未完了: 人間の承認を得て0003をSupabaseに適用 / 一覧の結合テストの実行 / スクリーンショット"
+        "人間の承認を得て、人間がSupabaseのSQL Editorで0003を実行し成功(2026-09-29)",
+        "npm run test:integration 12件成功(一覧に出さない印の除外・新しい順・ページ分け・範囲外のページ・タグの絞り込み)。範囲外のページが500になる不具合を見つけて修正(evidence/p3-5/README.md)",
+        "スクリーンショット evidence/p3-5/home-desktop.png・home-mobile-390.png: 一覧は工場出荷時配列の1件だけで、コンボのサンプル配列は出ない。/k/orca-echo-combo-sample は200",
+        "限界: 一覧に出る配列が1件のため、新しい順・ページ送りは実データで確認できていない。フェーズ5で配列が増えたら再確認する",
+        "評価役確認: passes 3条件を確認した(新しい順の確認が弱い点は上記のとおり記録)"
       ],
       "dependencies": [
         "P3-4"

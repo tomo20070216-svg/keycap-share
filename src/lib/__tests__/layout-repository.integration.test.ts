@@ -162,6 +162,15 @@ describe("配列の一覧(Supabase、0003適用後)", () => {
     expect(beyond.layouts).toEqual([]);
   });
 
+  it("件数を大きく超えたページを指定しても、エラーにならず空の一覧と総数が返る", async () => {
+    const all = await listLayouts({ perPage: 50 });
+    const far = await listLayouts({ page: 100, perPage: 20 });
+    expect(far).toEqual({ layouts: [], total: all.total });
+    const farTag = await listLayouts({ page: 100, perPage: 20, tag: "工場出荷時" });
+    expect(farTag.layouts).toEqual([]);
+    expect(farTag.total).toBeGreaterThanOrEqual(1);
+  });
+
   it("URLを直接開けば、一覧に出さない配列も取得できる", async () => {
     expect(await getLayoutBySlug("orca-echo-combo-sample")).not.toBeNull();
   });
