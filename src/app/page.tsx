@@ -1,14 +1,16 @@
 import { notFound } from "next/navigation";
 import { LayoutList } from "@/components/LayoutList";
 import { getKeyboardsFor } from "@/lib/layout-page-data";
-import { LAYOUTS_PER_PAGE, parsePageParam, totalPages } from "@/lib/layout-page-utils";
+import { LAYOUTS_PER_PAGE, parsePageParam, parseSortParam, totalPages } from "@/lib/layout-page-utils";
 import { listLayouts } from "@/lib/layout-repository";
 
-/** トップページ: 配列の一覧(新着順)(P3-5) */
+/** トップページ: 配列の一覧(新着順(P3-5)・人気順(P7-7)) */
 export default async function Home(props: PageProps<"/">) {
-  const page = parsePageParam((await props.searchParams).page);
-  if (page === null) notFound();
-  const { layouts, total } = await listLayouts({ page, perPage: LAYOUTS_PER_PAGE });
+  const searchParams = await props.searchParams;
+  const page = parsePageParam(searchParams.page);
+  const sort = parseSortParam(searchParams.sort);
+  if (page === null || sort === null) notFound();
+  const { layouts, total } = await listLayouts({ page, perPage: LAYOUTS_PER_PAGE, sort });
   if (page > totalPages(total)) notFound();
   const keyboards = await getKeyboardsFor(layouts);
 
@@ -21,12 +23,13 @@ export default async function Home(props: PageProps<"/">) {
           まずは Keychron Orca echo に対応しています。
         </p>
       </section>
-      <h2 className="text-lg font-bold">新着の配列</h2>
+      <h2 className="text-lg font-bold">{sort === "popular" ? "人気の配列" : "新着の配列"}</h2>
       <LayoutList
         layouts={layouts}
         keyboards={keyboards}
         total={total}
         page={page}
+        sort={sort}
         basePath="/"
         emptyMessage="まだ配列が投稿されていません。"
       />

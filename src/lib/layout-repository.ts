@@ -190,6 +190,7 @@ type LayoutRow = {
   forked_from_layout_id: string | null;
   created_at: string;
   updated_at: string;
+  star_count: number;
   layers: {
     layer_number: number;
     layer_name: string;
@@ -202,7 +203,7 @@ type LayoutRow = {
 
 /** 配列を取得するときの列(1件取得と一覧で共通) */
 const LAYOUT_SELECT = `id, slug, keyboard_id, title, description, author_name, forked_from_layout_id,
-       created_at, updated_at,
+       created_at, updated_at, star_count,
        layers ( layer_number, layer_name, assignments ( element_id, action, label ) ),
        layout_tags ( tags ( name ) ),
        combos ( position, element_ids, label, layer_numbers ),
@@ -233,11 +234,14 @@ export type LayoutListResult = {
 };
 
 /**
- * 一覧用: 一覧に出す配列(is_listed)を新しい順に取得する。
+ * 一覧用: 一覧に出す配列(is_listed)を取得する。
+ * sort: 新着順(省略時)・人気順(⭐️の多い順。同じ数なら新しい順。P7-7)。
  * tag を指定すると、そのタグが付いた配列だけに絞り込む。
  * page は1始まり。
  */
-export async function listLayouts(options: { page?: number; perPage?: number; tag?: string } = {}): Promise<LayoutListResult> {
+export async function listLayouts(
+  options: { page?: number; perPage?: number; tag?: string; sort?: "new" | "popular" } = {}
+): Promise<LayoutListResult> {
   const page = Math.max(1, Math.floor(options.page ?? 1));
   const perPage = Math.min(50, Math.max(1, Math.floor(options.perPage ?? 20)));
   const from = (page - 1) * perPage;
@@ -255,10 +259,9 @@ export async function listLayouts(options: { page?: number; perPage?: number; ta
     if (layoutIds.length === 0) return { layouts: [], total: 0 };
   }
 
-  let query = supabase
-    .from("layouts")
-    .select(LAYOUT_SELECT, { count: "exact" })
-    .eq("is_listed", true)
+  let query = supabase.from("layouts").select(LAYOUT_SELECT, { count: "exact" }).eq("is_listed", true);
+  if (options.sort === "popular") query = query.order("star_count", { ascending: false });
+  query = query
     .order("created_at", { ascending: false })
     .order("id", { ascending: true }) // 作成日時が同じときも並び順を固定する
     .range(from, from + perPage - 1);
@@ -289,6 +292,7 @@ function rowToLayout(data: LayoutRow): Layout {
     // Postgres の timestamptz("+00:00" 付き)を Zod の datetime 形式("Z")にそろえる
     createdAt: new Date(data.created_at).toISOString(),
     updatedAt: new Date(data.updated_at).toISOString(),
+    starCount: data.star_count,
     tags: data.layout_tags.flatMap((lt) => (lt.tags ? [lt.tags.name] : [])),
     // 並び順(position)がキー図の番号①②…になるので、必ず並べ替えてから返す
     combos: [...data.combos]

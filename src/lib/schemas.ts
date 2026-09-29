@@ -139,5 +139,7 @@ export const LayoutSchema = LayoutInputSchema.extend({
   slug: z.string().min(1), // 公開URL用
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  /** ⭐️(星)の数(P7-5) */
+  starCount: z.number().int().nonnegative().default(0),
 });
 export type Layout = z.infer<typeof LayoutSchema>;

@@ -7,7 +7,10 @@ import {
   checkDescriptionUrls,
   contentHash,
   countUrls,
+  STAR_LIMIT_PER_DAY,
+  STAR_LIMIT_PER_HOUR,
   decideReport,
+  decideStar,
   decideSubmission,
   hashIp,
 } from "@/lib/spam-rules";
@@ -71,5 +74,13 @@ describe("問題の報告の判断(P6-5)", () => {
     expect(decideReport({ lastHour: 0, lastDay: 0, alreadyReported: true })).toContain("すでに報告を受け付けています");
     expect(decideReport({ lastHour: 5, lastDay: 5, alreadyReported: false })).toContain("時間をおいてから");
     expect(decideReport({ lastHour: 0, lastDay: 20, alreadyReported: false })).toContain("時間をおいてから");
+  });
+});
+
+describe("⭐️の回数の制限(P7-6)", () => {
+  it("1時間に60回・1日に300回まで", () => {
+    expect(decideStar({ lastHour: STAR_LIMIT_PER_HOUR - 1, lastDay: 100 })).toBeNull();
+    expect(decideStar({ lastHour: STAR_LIMIT_PER_HOUR, lastDay: 100 })).toContain("時間をおいてから");
+    expect(decideStar({ lastHour: 0, lastDay: STAR_LIMIT_PER_DAY })).toContain("時間をおいてから");
   });
 });

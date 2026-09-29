@@ -54,6 +54,18 @@ export function decideReport(stats: { lastHour: number; lastDay: number; already
   return null;
 }
 
+/** ⭐️(星)を付ける・外す回数の上限(同じ接続元から。付ける・外すをそれぞれ1回と数える。P7-6) */
+export const STAR_LIMIT_PER_HOUR = 60;
+export const STAR_LIMIT_PER_DAY = 300;
+
+/** ⭐️を付ける・外すのを受け付けるか。受け付けないときはエラー文 */
+export function decideStar(stats: { lastHour: number; lastDay: number }): string | null {
+  if (stats.lastDay >= STAR_LIMIT_PER_DAY || stats.lastHour >= STAR_LIMIT_PER_HOUR) {
+    return "短い時間に⭐️の操作が続いたため、いったん受け付けを止めています。時間をおいてから、もう一度お試しください。";
+  }
+  return null;
+}
+
 /** 同じ内容かを見分けるためのハッシュ(タイトル・説明・レイヤー・コンボ・マクロ。投稿者名やタグの違いは同じ内容とみなす) */
 export function contentHash(input: { title: string; description?: string; layers: unknown; combos: unknown; macros: unknown }): string {
   const normalized = JSON.stringify([input.title.trim(), (input.description ?? "").trim(), input.layers, input.combos, input.macros]);

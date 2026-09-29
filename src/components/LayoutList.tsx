@@ -3,12 +3,13 @@ import { KeymapDiagram, getKeymapDiagramSize } from "@/components/KeymapDiagram"
 import { layoutPath, tagPath } from "@/components/LayoutView";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
-import { formatDateJa, totalPages } from "@/lib/layout-page-utils";
+import { formatDateJa, listHref, totalPages, type LayoutSort } from "@/lib/layout-page-utils";
 import type { KeyboardPhysicalLayout, Layout } from "@/lib/schemas";
 
 /**
  * 配列の一覧(トップの新着一覧・タグでの絞り込みで共通)。
- * カード: 通常レイヤー(番号が最小のレイヤー)の小さなキー図・タイトル・機種名・投稿者名・投稿日・タグ。
+ * カード: 通常レイヤー(番号が最小のレイヤー)の小さなキー図・タイトル・機種名・投稿者名・投稿日・⭐️の数・タグ。
+ * 上に「新着順 | 人気順」の切り替え(P7-7)。
  */
 
 /** カードのキー図の、キー1つ分の大きさ(px)。縮小表示なので文字は小さいが、配置の雰囲気が分かる */
@@ -44,6 +45,7 @@ function LayoutCard({ layout, keyboard }: { layout: Layout; keyboard: KeyboardPh
           <span>{keyboard?.name ?? layout.keyboardId}</span>
           <span>{`投稿者: ${layout.authorName ?? "名前なし"}`}</span>
           <span>{`投稿日: ${formatDateJa(layout.createdAt)}`}</span>
+          <span data-testid="card-star-count" aria-label={`⭐️ ${layout.starCount}`}>{`⭐️ ${layout.starCount}`}</span>
         </div>
       </div>
       {layout.tags.length > 0 && (
@@ -66,6 +68,7 @@ export function LayoutList({
   keyboards,
   total,
   page,
+  sort,
   basePath,
   emptyMessage,
 }: {
@@ -73,14 +76,30 @@ export function LayoutList({
   keyboards: Map<string, KeyboardPhysicalLayout>;
   total: number;
   page: number;
+  sort: LayoutSort;
   /** ページ送りのリンク先(例: "/"、"/tags/日本語入力") */
   basePath: string;
   emptyMessage: string;
 }) {
   const pages = totalPages(total);
-  const pageHref = (n: number) => (n === 1 ? basePath : `${basePath}?page=${n}`);
+  const pageHref = (n: number) => listHref(basePath, { page: n, sort });
+  const sortItem = (value: LayoutSort, label: string) => (
+    <Link
+      href={listHref(basePath, { sort: value })}
+      aria-current={sort === value ? "page" : undefined}
+      className={`rounded-md border px-3 py-1.5 text-sm ${
+        sort === value ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-300 hover:bg-zinc-100"
+      }`}
+    >
+      {label}
+    </Link>
+  );
   return (
     <div className="flex flex-col gap-6">
+      <nav aria-label="並べ替え" className="flex gap-2">
+        {sortItem("new", "新着順")}
+        {sortItem("popular", "人気順(⭐️の多い順)")}
+      </nav>
       {layouts.length === 0 ? (
         <p className="text-zinc-600">{emptyMessage}</p>
       ) : (

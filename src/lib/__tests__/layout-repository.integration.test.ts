@@ -27,6 +27,8 @@ import { checkEditSecret, deleteLayoutWithSecret, updateLayoutWithSecret } from 
 import { ogImageVersion } from "@/lib/og-image";
 import { checkSubmissionAllowed, ipHashFor, recordSubmission } from "@/lib/rate-limit";
 import { submitReport } from "@/lib/reports";
+import { STAR_LIMIT_PER_HOUR } from "@/lib/spam-rules";
+import { setStar } from "@/lib/stars";
 
 const FACTORY_DEFAULT_SLUG = "orca-echo-factory-default";
 
@@ -351,5 +353,67 @@ describe("問題の報告(Supabase、P6-5)", () => {
   it("存在しない配列・不正な理由の報告は受け付けない", async () => {
     expect((await submitReport({ slug: "no-such-slug", reason: "spam" }, fakeIpHash)).ok).toBe(false);
     expect((await submitReport({ slug: "orca-echo-combo-sample", reason: "bogus" }, fakeIpHash)).ok).toBe(false);
+  });
+});
+
+describe("⭐️(Supabase、0005適用後。P7-5〜P7-7)", () => {
+  // テスト用の架空の接続元。テストが付けた⭐️と記録は最後に削除する(人間の許可、2026-09-29)
+  const run = `${Date.now()}-${Math.random()}`;
+  const ipA = ipHashFor(`star-test-a-${run}`);
+  const ipB = ipHashFor(`star-test-b-${run}`);
+  const ipLimited = ipHashFor(`star-test-limit-${run}`);
+  const slug = "orca-echo-combo-sample";
+  afterAll(async () => {
+    const db = createServerSupabase();
+    for (const ip of [ipA, ipB, ipLimited]) {
+      await db.from("stars").delete().eq("ip_hash", ip);
+      await db.from("submission_events").delete().eq("ip_hash", ip);
+    }
+  });
+
+  it("付ける・同じ接続元の2回目は増えない・別の接続元で増える・外す。更新日時は変わらない", async () => {
+    const before = (await getLayoutBySlug(slug))!;
+    const base = before.starCount;
+    const a1 = await setStar({ slug, on: true }, ipA);
+    const a2 = await setStar({ slug, on: true }, ipA);
+    const b1 = await setStar({ slug, on: true }, ipB);
+    const a3 = await setStar({ slug, on: false }, ipA);
+    expect([a1, a2, b1, a3].map((r) => (r.ok ? r.starCount : r.error))).toEqual([base + 1, base + 1, base + 2, base + 1]);
+    const after = (await getLayoutBySlug(slug))!;
+    expect(after.starCount).toBe(base + 1);
+    expect(after.updatedAt).toBe(before.updatedAt);
+    console.log(`⭐️: 最初 ${base} → Aが付ける ${base + 1} → Aの2回目 ${base + 1} → Bが付ける ${base + 2} → Aが外す ${base + 1}。更新日時 ${before.updatedAt} → ${after.updatedAt}`);
+  });
+
+  it("存在しない配列・不正な入力は受け付けない。ブラウザ側の権限では星の表を読めず、関数も使えない", async () => {
+    const missing = await setStar({ slug: "no-such-slug", on: true }, ipA);
+    expect(missing.ok).toBe(false);
+    expect((await setStar({ slug, on: "yes" }, ipA)).ok).toBe(false);
+    const { supabase: anon } = await import("@/lib/supabase");
+    const read = await anon.from("stars").select("*").limit(1);
+    expect(read.error?.code).toBe("42501");
+    const rpc = await anon.rpc("set_star", { p_slug: slug, p_ip_hash: ipA, p_on: true });
+    expect(rpc.error).not.toBeNull();
+    console.log(`ブラウザ側の権限: stars の読み取り ${read.error?.code}、set_star ${rpc.error?.code}`);
+  });
+
+  it("同じ接続元から1時間に60回を超えると受け付けない", async () => {
+    const db = createServerSupabase();
+    const rows = Array.from({ length: STAR_LIMIT_PER_HOUR }, () => ({ kind: "star", ip_hash: ipLimited }));
+    const { error } = await db.from("submission_events").insert(rows);
+    expect(error).toBeNull();
+    const r = await setStar({ slug, on: true }, ipLimited);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain("時間をおいてから");
+    console.log(`61回目: ${r.ok ? "受け付けた" : r.error}`);
+  });
+
+  it("人気順: ⭐️の多い順、同じ数なら新しい順", async () => {
+    const { layouts } = await listLayouts({ sort: "popular", perPage: 50 });
+    for (let i = 1; i < layouts.length; i++) {
+      const [p, c] = [layouts[i - 1], layouts[i]];
+      expect(p.starCount > c.starCount || (p.starCount === c.starCount && p.createdAt >= c.createdAt)).toBe(true);
+    }
+    console.log(`人気順: ${layouts.map((l) => `${l.slug}(⭐️${l.starCount})`).join(", ")}`);
   });
 });

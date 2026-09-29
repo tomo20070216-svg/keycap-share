@@ -4,6 +4,7 @@ import { OwnerEditLink } from "@/components/OwnerEditLink";
 import { KeymapDiagram, getKeymapDiagramSize } from "@/components/KeymapDiagram";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { SharePanel } from "@/components/SharePanel";
+import { StarButton } from "@/components/StarButton";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
 import { formatDateJa } from "@/lib/layout-page-utils";
 import { ogImagePath } from "@/lib/og-image";
@@ -76,6 +77,7 @@ export function LayoutHeader({
           ))}
         </ul>
       )}
+      <StarButton slug={layout.slug} initialCount={layout.starCount} />
       <div className="flex flex-wrap items-center gap-2">
         <OwnerEditLink slug={layout.slug} />
         <Link

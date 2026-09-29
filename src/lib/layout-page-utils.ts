@@ -36,6 +36,24 @@ export function parsePageParam(value: string | string[] | undefined): number | n
   return Number(value);
 }
 
+/** 一覧の並べ替え(P7-7): 新着順(省略時)・人気順(⭐️の多い順) */
+export type LayoutSort = "new" | "popular";
+
+/** URLの ?sort= の値を読む。省略は新着順、"popular" は人気順。それ以外は null(= 404にする) */
+export function parseSortParam(value: string | string[] | undefined): LayoutSort | null {
+  if (value === undefined) return "new";
+  return value === "popular" ? "popular" : null;
+}
+
+/** 一覧のURL(並べ替えとページ)。新着順・1ページ目は省略する */
+export function listHref(basePath: string, options: { page?: number; sort?: LayoutSort } = {}): string {
+  const params = new URLSearchParams();
+  if (options.sort === "popular") params.set("sort", "popular");
+  if (options.page && options.page > 1) params.set("page", String(options.page));
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
+}
+
 /** 総数から総ページ数を求める(0件でも1ページとする) */
 export function totalPages(total: number, perPage = LAYOUTS_PER_PAGE): number {
   return Math.max(1, Math.ceil(total / perPage));

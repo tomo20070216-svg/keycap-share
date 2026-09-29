@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { decodeTagParam, findLayerByParam, formatDateJa, parsePageParam, totalPages } from "@/lib/layout-page-utils";
+import {
+  decodeTagParam,
+  findLayerByParam,
+  formatDateJa,
+  listHref,
+  parsePageParam,
+  parseSortParam,
+  totalPages,
+} from "@/lib/layout-page-utils";
 import type { Layout } from "@/lib/schemas";
 
 const layout = {
@@ -62,5 +70,21 @@ describe("decodeTagParam URLのタグ名", () => {
     expect(decodeTagParam("")).toBeNull();
     expect(decodeTagParam("あ".repeat(21))).toBeNull();
     expect(decodeTagParam("%E3%81")).toBeNull();
+  });
+});
+
+describe("一覧の並べ替え(P7-7)", () => {
+  it("?sort= は省略で新着順、popular で人気順、それ以外は null(404)", () => {
+    expect(parseSortParam(undefined)).toBe("new");
+    expect(parseSortParam("popular")).toBe("popular");
+    for (const v of ["new", "", "Popular", "stars"]) expect(parseSortParam(v), v).toBeNull();
+    expect(parseSortParam(["popular", "popular"])).toBeNull();
+  });
+  it("一覧のURLは、新着順・1ページ目を省略し、ページ送りでも並べ替えを保つ", () => {
+    expect(listHref("/")).toBe("/");
+    expect(listHref("/", { page: 1, sort: "new" })).toBe("/");
+    expect(listHref("/", { page: 2, sort: "new" })).toBe("/?page=2");
+    expect(listHref("/", { sort: "popular" })).toBe("/?sort=popular");
+    expect(listHref("/tags/%E6%97%A5", { page: 3, sort: "popular" })).toBe("/tags/%E6%97%A5?sort=popular&page=3");
   });
 });

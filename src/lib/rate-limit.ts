@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { DUPLICATE_WINDOW_MINUTES, decideReport, decideSubmission, hashIp } from "@/lib/spam-rules";
+import { DUPLICATE_WINDOW_MINUTES, decideReport, decideStar, decideSubmission, hashIp } from "@/lib/spam-rules";
 import { createServerSupabase } from "@/lib/supabase-server";
 
 /**
@@ -7,7 +7,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
  * 記録は submission_events(0004)。接続元はハッシュにして保存する。
  */
 
-export type EventKind = "layout_create" | "report";
+export type EventKind = "layout_create" | "report" | "star";
 
 /** リクエストのヘッダーから接続元のIPアドレスを取り出す(Vercel では x-forwarded-for の先頭) */
 export function clientIpFrom(headers: Headers): string {
@@ -58,6 +58,15 @@ export async function checkSubmissionAllowed(kind: EventKind, ipHash: string, co
     duplicateRecent = (count ?? 0) > 0;
   }
   return decideSubmission({ lastHour, lastDay, duplicateRecent });
+}
+
+/** ⭐️を付ける・外すのを受け付けてよいか(P7-6)。同じ接続元からの回数を見る */
+export async function checkStarAllowed(ipHash: string): Promise<string | null> {
+  const [lastHour, lastDay] = await Promise.all([
+    countSince("star", ipHash, 60 * 60 * 1000),
+    countSince("star", ipHash, 24 * 60 * 60 * 1000),
+  ]);
+  return decideStar({ lastHour, lastDay });
 }
 
 /**
