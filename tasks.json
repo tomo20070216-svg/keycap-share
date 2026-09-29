@@ -1057,12 +1057,17 @@
       "phase": 6,
       "role": "executor",
       "task": "投稿数の制限と簡易的な不正検知: 同じ接続元(ハッシュ化したIP)から1時間に5件・1日に20件まで。説明文にURLが3つ以上ある投稿、同じ内容の短時間の連投を拒否する。エラー文は docs/voice.md の方針",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "上限を超えた投稿・URLの多い説明文・同じ内容の連投が拒否されることをテストで確認している",
         "接続元のIPアドレスがそのままDBに保存されないことを確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/lib/spam-rules.ts(判断)と src/lib/rate-limit.ts(DB)を作成し、新規投稿の Server Function で接続元のハッシュを渡すようにした。説明文のURL3つ以上は新規・編集とも拒否",
+        "単体テスト(spam-rules.test.ts)で、1時間5件・1日20件・同じ内容の連投・URLの数の判断とエラー文を確認。結合テストで、同じ接続元の6件目が拒否されること、同じ内容の連投が別の接続元からでも拒否されることを確認(npm test 112件、npm run test:integration 17件成功。evidence/p6-4/README.md)",
+        "IPアドレスは salt 入りの SHA-256 でだけ保存され、記録は64桁の16進数だけ(結合テストで確認。DBの制約でもIPそのものは保存できない)",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P6-3"
       ]

@@ -2,6 +2,7 @@ import type { z } from "zod";
 import { orcaEcho } from "@/keyboards/orca-echo";
 import { validateCombos, validateLayersAgainstPhysicalLayout } from "@/lib/layout-validation";
 import { LayoutInputSchema, type KeyboardPhysicalLayout, type LayoutInput } from "@/lib/schemas";
+import { checkDescriptionUrls } from "@/lib/spam-rules";
 
 /**
  * エディタからの投稿の検証(P5-1)。Supabaseを使わない部分なので、ここだけでテストできる。
@@ -62,6 +63,9 @@ export function validateSubmission(raw: unknown): SubmissionValidation {
   }
 
   const errors: string[] = [];
+  // 簡易的な不正検知: 説明文のURLが多すぎる投稿(宣伝目的のスパム)を拒否する(P6-4)
+  const urlError = checkDescriptionUrls(input.description);
+  if (urlError) errors.push(urlError);
   const layerNumbers = input.layers.map((l) => l.layerNumber);
   if (new Set(layerNumbers).size !== layerNumbers.length) {
     errors.push("同じ番号のレイヤーが2つあります。レイヤーを見直してください。");

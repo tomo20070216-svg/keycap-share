@@ -1,5 +1,7 @@
 import { createLayout } from "@/lib/layout-repository";
 import { validateSubmission } from "@/lib/layout-submission";
+import { checkSubmissionAllowed, recordSubmission } from "@/lib/rate-limit";
+import { contentHash } from "@/lib/spam-rules";
 
 /**
  * 投稿を検証して保存する(P5-1)。サーバー側でのみ使う(secret key で書き込むため)。
@@ -11,15 +13,26 @@ export type SubmitResult =
 
 export async function submitLayout(
   raw: unknown,
-  options: { isListed?: boolean; slug?: string } = {}
+  options: {
+    isListed?: boolean;
+    slug?: string;
+    /** 接続元のハッシュ。渡したときは投稿数の制限と同じ内容の連投の検知を行う(P6-4) */
+    ipHash?: string;
+  } = {}
 ): Promise<SubmitResult> {
   const validation = validateSubmission(raw);
   if (!validation.ok) return validation;
+  const content = contentHash(validation.input);
+  if (options.ipHash) {
+    const limited = await checkSubmissionAllowed("layout_create", options.ipHash, content);
+    if (limited) return { ok: false, errors: [limited] };
+  }
   try {
     const { layout, editSecret } = await createLayout(validation.input, {
       isListed: options.isListed ?? true,
       slug: options.slug,
     });
+    if (options.ipHash) await recordSubmission("layout_create", options.ipHash, content);
     return { ok: true, slug: layout.slug, editSecret };
   } catch (error) {
     console.error("配列の保存に失敗しました", error);

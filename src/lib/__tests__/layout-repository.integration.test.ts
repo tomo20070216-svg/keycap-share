@@ -25,6 +25,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import { submitLayout } from "@/lib/layout-submit";
 import { checkEditSecret, deleteLayoutWithSecret, updateLayoutWithSecret } from "@/lib/layout-edit";
 import { ogImageVersion } from "@/lib/og-image";
+import { checkSubmissionAllowed, ipHashFor, recordSubmission } from "@/lib/rate-limit";
 
 const FACTORY_DEFAULT_SLUG = "orca-echo-factory-default";
 
@@ -289,5 +290,34 @@ describe("編集・削除(Supabase、P6-2)— 2つの異なる秘密キー", () 
     expect(await deleteLayoutWithSecret(b.slug, b.editSecret)).toEqual({ ok: true });
     expect(await getLayoutBySlug(b.slug)).toBeNull();
     console.log("B を B のキーで削除: OK");
+  });
+});
+
+describe("投稿数の制限(Supabase、P6-4)", () => {
+  // テスト用の架空の接続元。テストが作った記録は最後に削除する(人間の許可、2026-09-29)
+  const fakeIpHash = ipHashFor(`test-${Date.now()}-${Math.random()}`);
+  const otherIpHash = ipHashFor(`other-${Date.now()}-${Math.random()}`);
+  afterAll(async () => {
+    await createServerSupabase().from("submission_events").delete().in("ip_hash", [fakeIpHash, otherIpHash]);
+  });
+
+  it("同じ接続元から1時間に5件を超えると拒否される。IPアドレスはハッシュでだけ記録される", async () => {
+    for (let i = 0; i < 5; i++) {
+      expect(await checkSubmissionAllowed("layout_create", fakeIpHash, null)).toBeNull();
+      await recordSubmission("layout_create", fakeIpHash, null);
+    }
+    const blocked = await checkSubmissionAllowed("layout_create", fakeIpHash, null);
+    expect(blocked).toContain("1時間ほど時間をおいて");
+    console.log(`6件目: ${blocked}`);
+    const { data } = await createServerSupabase().from("submission_events").select("ip_hash").eq("ip_hash", fakeIpHash);
+    expect(data).toHaveLength(5);
+    expect(data!.every((r) => /^[0-9a-f]{64}$/.test(r.ip_hash))).toBe(true);
+  });
+
+  it("同じ内容を10分以内に続けて投稿すると、別の接続元からでも拒否される", async () => {
+    const content = "f".repeat(63) + String(Math.floor(Math.random() * 10));
+    await recordSubmission("layout_create", otherIpHash, content);
+    const third = ipHashFor(`third-${Date.now()}`);
+    expect(await checkSubmissionAllowed("layout_create", third, content)).toContain("同じ内容の配列が少し前に投稿されています");
   });
 });

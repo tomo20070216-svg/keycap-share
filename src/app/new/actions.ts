@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { isDevPagesEnabled } from "@/lib/dev-pages";
+import { clientIpFrom, ipHashFor } from "@/lib/rate-limit";
 import { submitLayout, type SubmitResult } from "@/lib/layout-submit";
 
 /**
@@ -10,5 +12,7 @@ import { submitLayout, type SubmitResult } from "@/lib/layout-submit";
  */
 export async function submitLayoutAction(input: unknown, testPost: boolean): Promise<SubmitResult> {
   const isListed = !(testPost === true && isDevPagesEnabled());
-  return submitLayout(input, { isListed });
+  // 投稿数の制限のため、接続元をハッシュにして渡す(IPアドレスそのものは保存しない)
+  const ipHash = ipHashFor(clientIpFrom(await headers()));
+  return submitLayout(input, { isListed, ipHash });
 }
