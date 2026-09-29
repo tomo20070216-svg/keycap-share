@@ -4,7 +4,7 @@
  * 工場出荷時配列は「最初の1件」として DB に残す方針(人間の判断、2026-09-28)。
  * そのため固定slugで保存し、2回目以降は保存済みのものを取得して内容を検証する。
  */
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { orcaEcho } from "@/keyboards/orca-echo";
 import { orcaEchoFactoryDefaultLayers } from "@/keyboards/orca-echo-factory-default";
 import {
@@ -23,6 +23,8 @@ import {
 import type { Layer, LayoutInput } from "@/lib/schemas";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { submitLayout } from "@/lib/layout-submit";
+import { checkEditSecret, deleteLayoutWithSecret, updateLayoutWithSecret } from "@/lib/layout-edit";
+import { ogImageVersion } from "@/lib/og-image";
 
 const FACTORY_DEFAULT_SLUG = "orca-echo-factory-default";
 
@@ -189,38 +191,103 @@ describe("配列の一覧(Supabase、0003適用後)", () => {
 });
 
 describe("エディタからの投稿の保存(Supabase、P5-1)", () => {
-  const SUBMIT_TEST_SLUG = "p5-1-submit-test";
+  // テストが自分で作ったテスト投稿は、最後に自動で削除する(人間の許可、2026-09-29。P6-7)
+  const created: { slug: string; secret: string }[] = [];
+  afterAll(async () => {
+    for (const c of created) await deleteLayoutWithSecret(c.slug, c.secret);
+    for (const c of created) expect(await getLayoutBySlug(c.slug)).toBeNull();
+  });
 
   it("正しい入力は一覧に出さないテスト投稿として保存され、秘密キーはハッシュだけがDBに残る", async () => {
-    const existing = await getLayoutBySlug(SUBMIT_TEST_SLUG);
-    if (existing) {
-      console.log(`保存済みのテスト投稿を使用: slug=${existing.slug}`);
-    } else {
-      const result = await submitLayout(
-        { keyboardId: "orca-echo", title: "P5-1 保存処理のテスト投稿", tags: ["テスト投稿"], layers: orcaEchoFactoryDefaultLayers },
-        { isListed: false, slug: SUBMIT_TEST_SLUG }
-      );
-      expect(result.ok).toBe(true);
-      if (!result.ok) return;
-      expect(result.slug).toBe(SUBMIT_TEST_SLUG);
-      expect(result.editSecret).toMatch(/^[A-Za-z0-9_-]{43}$/);
-      const { data } = await createServerSupabase()
-        .from("layouts")
-        .select("is_listed, layout_secrets ( edit_secret_hash )")
-        .eq("slug", SUBMIT_TEST_SLUG)
-        .single<{ is_listed: boolean; layout_secrets: { edit_secret_hash: string } | null }>();
-      expect(data!.is_listed).toBe(false);
-      expect(data!.layout_secrets!.edit_secret_hash).toBe(hashEditSecret(result.editSecret));
-      console.log(`新規保存: slug=${result.slug}(一覧に出さない)`);
-    }
-    const layout = await getLayoutBySlug(SUBMIT_TEST_SLUG);
+    const result = await submitLayout(
+      { keyboardId: "orca-echo", title: "P5-1 保存処理のテスト投稿", tags: ["テスト投稿"], layers: orcaEchoFactoryDefaultLayers },
+      { isListed: false }
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    created.push({ slug: result.slug, secret: result.editSecret });
+    expect(result.slug).toMatch(/^[A-Za-z0-9_-]{11}$/);
+    expect(result.editSecret).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    const { data } = await createServerSupabase()
+      .from("layouts")
+      .select("is_listed, layout_secrets ( edit_secret_hash )")
+      .eq("slug", result.slug)
+      .single<{ is_listed: boolean; layout_secrets: { edit_secret_hash: string } | null }>();
+    expect(data!.is_listed).toBe(false);
+    expect(data!.layout_secrets!.edit_secret_hash).toBe(hashEditSecret(result.editSecret));
+    console.log(`新規保存: slug=${result.slug}(一覧に出さない。テストの最後に削除する)`);
+    const layout = await getLayoutBySlug(result.slug);
     expect(layout?.title).toBe("P5-1 保存処理のテスト投稿");
-    expect((await listLayouts({ perPage: 50 })).layouts.map((l) => l.slug)).not.toContain(SUBMIT_TEST_SLUG);
+    expect((await listLayouts({ perPage: 50 })).layouts.map((l) => l.slug)).not.toContain(result.slug);
   });
 
   it("不正な入力はDBに何も書かずにエラーを返す", async () => {
     const result = await submitLayout({ keyboardId: "orca-echo", title: "", layers: [] }, { isListed: false, slug: "p5-1-invalid-test" });
     expect(result.ok).toBe(false);
     expect(await getLayoutBySlug("p5-1-invalid-test")).toBeNull();
+  });
+});
+
+describe("編集・削除(Supabase、P6-2)— 2つの異なる秘密キー", () => {
+  // テストが自分で作ったテスト投稿は、最後に自動で削除する(人間の許可、2026-09-29)
+  const created: { slug: string; secret: string }[] = [];
+  const base = { keyboardId: "orca-echo", tags: ["テスト投稿"], layers: orcaEchoFactoryDefaultLayers };
+
+  afterAll(async () => {
+    for (const c of created) await deleteLayoutWithSecret(c.slug, c.secret);
+    for (const c of created) expect(await getLayoutBySlug(c.slug)).toBeNull();
+  });
+
+  it("自分の秘密キーでは編集・削除でき、他人の秘密キーではできない", async () => {
+    const a = await submitLayout({ ...base, title: "P6-2 テスト投稿A" }, { isListed: false });
+    const b = await submitLayout({ ...base, title: "P6-2 テスト投稿B" }, { isListed: false });
+    if (!a.ok || !b.ok) throw new Error("テスト投稿を作れませんでした");
+    created.push({ slug: a.slug, secret: a.editSecret }, { slug: b.slug, secret: b.editSecret });
+    const before = (await getLayoutBySlug(a.slug))!;
+    console.log(`テスト投稿: A=${a.slug} B=${b.slug}`);
+
+    // 秘密キーの確認
+    expect(await checkEditSecret(a.slug, a.editSecret)).toBe(true);
+    expect(await checkEditSecret(a.slug, b.editSecret)).toBe(false);
+    expect(await checkEditSecret(a.slug, "")).toBe(false);
+
+    // A のキーで A を編集できる(内容・更新日時・OGP画像の版が変わる)
+    const edited = {
+      ...base,
+      title: "P6-2 テスト投稿A(編集後)",
+      description: "編集した説明",
+      tags: ["編集後"],
+      layers: [{ layerNumber: 0, layerName: "通常", assignments: [{ elementId: "L-0-0", action: "press" as const, label: "半角/全角" }] }],
+      combos: [{ elementIds: ["R-1-2", "R-1-3"], label: "左クリック", layerNumbers: [] }],
+    };
+    await new Promise((r) => setTimeout(r, 50));
+    expect(await updateLayoutWithSecret(a.slug, a.editSecret, edited)).toEqual({ ok: true });
+    const after = (await getLayoutBySlug(a.slug))!;
+    expect(after.title).toBe("P6-2 テスト投稿A(編集後)");
+    expect(after.description).toBe("編集した説明");
+    expect(after.tags).toEqual(["編集後"]);
+    expect(after.layers).toHaveLength(1);
+    expect(after.layers[0].assignments).toEqual([{ elementId: "L-0-0", action: "press", label: "半角/全角" }]);
+    expect(after.combos).toEqual([{ elementIds: ["R-1-2", "R-1-3"], label: "左クリック", layerNumbers: [] }]);
+    expect(Date.parse(after.updatedAt)).toBeGreaterThan(Date.parse(before.updatedAt));
+    expect(ogImageVersion(after)).not.toBe(ogImageVersion(before));
+    console.log(`A を A のキーで編集: OK(OGP画像の版 ${ogImageVersion(before)} → ${ogImageVersion(after)})`);
+
+    // B のキーでは A を編集・削除できず、A は変わらない
+    const wrongEdit = await updateLayoutWithSecret(a.slug, b.editSecret, { ...edited, title: "乗っ取り" });
+    expect(wrongEdit.ok).toBe(false);
+    expect((await getLayoutBySlug(a.slug))!.title).toBe("P6-2 テスト投稿A(編集後)");
+    expect((await deleteLayoutWithSecret(a.slug, b.editSecret)).ok).toBe(false);
+    expect(await getLayoutBySlug(a.slug)).not.toBeNull();
+    console.log("A を B のキーで編集・削除: 拒否され、A は変わらない");
+
+    // 不正な内容は検証で拒否され、A は変わらない
+    expect((await updateLayoutWithSecret(a.slug, a.editSecret, { ...edited, title: "" })).ok).toBe(false);
+    expect((await getLayoutBySlug(a.slug))!.title).toBe("P6-2 テスト投稿A(編集後)");
+
+    // B のキーで B を削除できる
+    expect(await deleteLayoutWithSecret(b.slug, b.editSecret)).toEqual({ ok: true });
+    expect(await getLayoutBySlug(b.slug)).toBeNull();
+    console.log("B を B のキーで削除: OK");
   });
 });
