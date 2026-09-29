@@ -80,3 +80,23 @@ describe("fitSingleLine 1行に収める(OGP画像のタイトル用)", () => {
     expect(estimateTextWidthEm(r.text) * 28).toBeLessThanOrEqual(1000);
   });
 });
+
+describe("小さなキー図(一覧のカード)で長い名前がはみ出さない", () => {
+  // カードのキー図: キー1つ30px → 文字の幅の上限 約23px、基本の文字サイズ 9px(下限6px)
+  const maxWidth = 30 * 0.9 * 0.86;
+  const base = 30 * 0.3;
+
+  it("下限の大きさでも1行に収まらない名前は、2行に分けて収める(BackSpace → Back / Space)", () => {
+    const r = fitLabel("BackSpace", maxWidth, base);
+    expect(r.lines).toEqual(["Back", "Space"]);
+    for (const line of r.lines) expect(estimateTextWidthEm(line) * r.fontSize).toBeLessThanOrEqual(maxWidth + 1e-6);
+  });
+
+  it("よく使う長めのキー名も、カードの大きさで幅に収まる", () => {
+    for (const label of ["BackSpace", "Caps Lock", "Enter", "Shift", "半角/全角", "Print Screen", "左クリック"]) {
+      const r = fitLabel(label, maxWidth, base);
+      const widest = Math.max(...r.lines.map((l) => estimateTextWidthEm(l)));
+      expect(widest * r.fontSize, `${label} → ${r.lines.join(" / ")} (${r.fontSize.toFixed(1)}px)`).toBeLessThanOrEqual(maxWidth + 1e-6);
+    }
+  });
+});

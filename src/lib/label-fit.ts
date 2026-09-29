@@ -77,7 +77,9 @@ export function fitLabel(
   oneLineMinRatio = 0.5
 ): FittedLabel {
   const oneLine = fitFontSize(text, maxWidth, baseSize);
-  if (oneLine >= baseSize * oneLineMinRatio || [...text].length < 2) {
+  // 下限の大きさまで縮めても幅からはみ出すとき(小さなキー図の「BackSpace」など)も2行に分ける
+  const overflows = estimateTextWidthEm(text) * oneLine > maxWidth + 1e-6;
+  if ((oneLine >= baseSize * oneLineMinRatio && !overflows) || [...text].length < 2) {
     return { fontSize: oneLine, lines: [text] };
   }
   const lines = splitIntoTwoLines(text);
