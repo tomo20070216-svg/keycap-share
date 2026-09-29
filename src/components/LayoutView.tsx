@@ -2,8 +2,12 @@ import Link from "next/link";
 import { ComboMacroList } from "@/components/ComboMacroList";
 import { KeymapDiagram, getKeymapDiagramSize } from "@/components/KeymapDiagram";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
+import { SharePanel } from "@/components/SharePanel";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
 import { formatDateJa } from "@/lib/layout-page-utils";
+import { ogImagePath } from "@/lib/og-image";
+import { buildShareText } from "@/lib/share";
+import { getSiteUrl } from "@/lib/site";
 import type { KeyboardPhysicalLayout, Layer, Layout } from "@/lib/schemas";
 
 /**
@@ -146,5 +150,26 @@ export function LayerSection({
 export function LayoutCombosAndMacros({ layout, keyboard }: { layout: Layout; keyboard: KeyboardPhysicalLayout }) {
   return (
     <ComboMacroList physicalLayout={keyboard} layers={layout.layers} combos={layout.combos} macros={layout.macros} />
+  );
+}
+
+/** 共有パネル(サーバー側で文面の初期値・絶対URL・画像URLを決めて渡す) */
+export function LayoutSharePanel({
+  layout,
+  keyboard,
+  layerNumber,
+}: {
+  layout: Layout;
+  keyboard: KeyboardPhysicalLayout;
+  layerNumber?: number;
+}) {
+  const pageUrl = new URL(layoutPath(layout.slug, layerNumber), getSiteUrl()).href;
+  return (
+    <SharePanel
+      initialText={buildShareText({ title: layout.title, keyboardName: keyboard.name, keyboardId: keyboard.id })}
+      pageUrl={pageUrl}
+      imageUrl={ogImagePath(layout, layerNumber)}
+      imageFileName={`${layout.slug}${layerNumber === undefined ? "" : `-${layerNumber}`}.png`}
+    />
   );
 }

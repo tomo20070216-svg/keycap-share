@@ -643,12 +643,17 @@
       "phase": 4,
       "role": "executor",
       "task": "Xの共有ボタン: サイト側に文面の編集欄(初期値: タイトル・機種名・URL・ハッシュタグ #OrcaEcho #分割キーボード)を置き、ボタンでXの投稿画面(Web Intent)をその文面で開く。Xの開発者アカウントやAPIは使わない",
-      "status": "todo",
+      "status": "in_progress",
       "passes": [
         "編集欄の初期値が docs/voice.md の方針どおりである",
         "編集した文面でXの投稿画面が開くことを確認している(投稿画面のスクリーンショット。投稿はしない)"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/components/SharePanel.tsx(文面の編集欄+Xで共有する)と src/lib/share.ts(文面の初期値・ハッシュタグ・Web IntentのURL。テスト3件)を作成。配列ページ・レイヤーページに配置",
+        "文面の初期値は docs/voice.md のテンプレートどおり(evidence/p4-4/share-panel-initial.png)",
+        "ヘッドレスChromeで、書き換えた文面がXの投稿画面のURL(https://x.com/intent/post?text=…&url=…)に正しく入ることを確認(evidence/p4-4/README.md)",
+        "未完了: Xの投稿画面が実際に開いた状態のスクリーンショット(Xへのログインが必要なため、本番反映後に人間が確認。P4-7)"
+      ],
       "dependencies": [
         "P4-3"
       ]
@@ -658,12 +663,16 @@
       "phase": 4,
       "role": "executor",
       "task": "「画像をダウンロード」「画像をコピー」の機能。コピーに対応していないブラウザでは、その旨と代わりの方法を表示する",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "ダウンロードしたファイルが1200×630のPNGであることを確認している",
         "コピーが動くことを確認している、または対応していない環境での表示を確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "SharePanel に「画像をダウンロード」(OGP画像へのリンク、download属性)と「画像をコピー」(Clipboard API。SafariのためPromiseのまま渡す)を実装",
+        "ヘッドレスChromeで確認: ダウンロードしたファイルは PNG 1200×630。コピー後のクリップボードは image/png 1200×630。ClipboardItem がない環境では「対応していません…ダウンロードで保存してから」と表示(evidence/p4-4/README.md)",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P4-4"
       ]
@@ -673,11 +682,14 @@
       "phase": 4,
       "role": "executor",
       "task": "Xのカード画像のキャッシュについての注意書きを画面に表示する(docs/voice.md の文例)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "共有ボタンの近くに注意書きが表示されているスクリーンショットがある"
       ],
-      "evidence": [],
+      "evidence": [
+        "共有ボタンの下に docs/voice.md の文例「Xのカード画像は一度読み込まれるとしばらく更新されないことがあります。…」を表示(evidence/p4-4/share-panel-initial.png)",
+        "評価役確認: passesの条件を確認した"
+      ],
       "dependencies": [
         "P4-5"
       ]

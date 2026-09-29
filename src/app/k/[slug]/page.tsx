@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { LayerNav, LayerSection, LayoutCombosAndMacros, LayoutHeader } from "@/components/LayoutView";
+import { LayerNav, LayerSection, LayoutCombosAndMacros, LayoutHeader, LayoutSharePanel } from "@/components/LayoutView";
 import { buildLayoutMetadata } from "@/lib/layout-metadata";
 import { getLayoutPageData } from "@/lib/layout-page-data";
 
@@ -22,6 +22,7 @@ export default async function LayoutPage(props: PageProps<"/k/[slug]">) {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
       <LayoutHeader layout={layout} keyboard={keyboard} />
+      <LayoutSharePanel layout={layout} keyboard={keyboard} />
       <LayerNav layout={layout} />
       {layout.layers.map((layer) => (
         <LayerSection key={layer.layerNumber} layout={layout} keyboard={keyboard} layer={layer} />
