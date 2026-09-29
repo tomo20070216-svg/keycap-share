@@ -9,3 +9,7 @@
 「＋ レイヤーを追加」を7回押した後: 0〜7 の8つで止まり、追加ボタンは押せない(disabled)
 ```
 `layers-8.png`
+
+## 本番での確認(https://keycap-share.vercel.app/new 、push b21d309..903c719 のあと)
+- 「＋ レイヤーを追加」を7回押すと 0〜7 の8つで止まり、追加ボタンは押せない。説明は「(最大8個)」。投稿はしていない。
+- トップと保存済みの3つの配列ページ(Iywp3BUpM-g・orca-echo-factory-default・orca-echo-combo-sample)はすべて 200。
