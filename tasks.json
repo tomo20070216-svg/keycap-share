@@ -993,12 +993,16 @@
       "phase": 6,
       "role": "executor",
       "task": "DBの追加(supabase/migrations/0004): 配列の更新を1つのまとまりとして行う関数、投稿数の記録(接続元はハッシュ化)、問題の報告の記録。人間の承認を得て適用する",
-      "status": "todo",
+      "status": "in_progress",
       "passes": [
         "0004がローカルのPostgreSQLで検証されている(更新が途中で失敗しても元のまま残ること、ブラウザ側の権限では関数・記録にアクセスできないことを含む)",
         "人間の承認を得てSupabaseに適用されている"
       ],
-      "evidence": [],
+      "evidence": [
+        "supabase/migrations/0004_edit_ratelimit_reports.sql を作成: replace_layout_content(秘密キーのハッシュを照合して内容を1つのトランザクションで置き換え)、delete_layout_with_secret、submission_events(IPはハッシュのみ)、reports。関数は anon/authenticated から実行権限を外し service_role にだけ付与",
+        "ローカルPostgreSQL 17.6 で0001〜0004を適用して検証(evidence/p6-1/local-migration-test.md): 正しいキーで更新・更新日時が変わる / 違うキーではエラーで何も変わらない / 途中で失敗すると全部元に戻る / 削除は正しいキーのときだけ / IPアドレスそのものは保存できない / anon は関数を実行できず記録・報告を読めない",
+        "未完了: 人間の承認を得てSupabaseに適用"
+      ],
       "dependencies": [
         "P6-PLACEHOLDER"
       ]
