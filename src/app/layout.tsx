@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PendingLinkLabel } from "@/components/PendingLinkLabel";
 import { SITE_NAME, getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 配列の一覧
               </Link>
               <Link href="/new" className="rounded-md bg-zinc-900 px-3 py-1.5 font-bold text-white hover:bg-zinc-700">
-                配列を投稿する
+                <PendingLinkLabel label="配列を投稿する" pendingLabel="開いています…" />
               </Link>
             </nav>
           </div>

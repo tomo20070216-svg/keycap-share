@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ComboMacroList } from "@/components/ComboMacroList";
+import { OwnerEditLink } from "@/components/OwnerEditLink";
 import { KeymapDiagram, getKeymapDiagramSize } from "@/components/KeymapDiagram";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { SharePanel } from "@/components/SharePanel";
@@ -75,7 +76,8 @@ export function LayoutHeader({
           ))}
         </ul>
       )}
-      <div>
+      <div className="flex flex-wrap items-center gap-2">
+        <OwnerEditLink slug={layout.slug} />
         <Link
           href={`/new?from=${encodeURIComponent(layout.slug)}`}
           className="inline-block rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100"

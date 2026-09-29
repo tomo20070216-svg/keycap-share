@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useReducer, useRef, useState, useTransition } from "react";
+import { deleteLayoutAction, updateLayoutAction } from "@/app/k/[slug]/edit/actions";
 import { submitLayoutAction } from "@/app/new/actions";
 import { ActionChooser } from "@/components/editor/ActionChooser";
 import { ComboEditor, MacroEditor } from "@/components/editor/ComboMacroEditor";
@@ -12,6 +13,7 @@ import { LayerTabs } from "@/components/editor/LayerTabs";
 import { useKeyDrag, type DragSource } from "@/components/editor/useKeyDrag";
 import { canRedo, canUndo, createHistory, historyReducer, type EditorHistory, type HistoryAction } from "@/lib/editor-history";
 import { canSwapElements, toLayoutInput, type EditorState } from "@/lib/editor-state";
+import { removeEditKey, saveEditKey } from "@/lib/edit-keys";
 import type { KeyboardPhysicalLayout } from "@/lib/schemas";
 
 /**
@@ -20,10 +22,10 @@ import type { KeyboardPhysicalLayout } from "@/lib/schemas";
  * - 「元に戻す」「やり直す」
  * - 入力途中の内容は、このブラウザに下書きとして自動保存する(再読み込みしても戻る)
  * - 保存すると、配列ページのURLと編集用URL(秘密キー入り)を表示し、編集用URLはこのブラウザにも保存する
+ * - 編集モード(edit を渡したとき。P6-3): 保存すると今の配列を更新し、削除もできる
  */
 
 const DRAFT_PREFIX = "keycap-share:draft:";
-const EDIT_KEYS_STORAGE = "keycap-share:edit-keys";
 
 type Saved = { slug: string; editSecret: string };
 
@@ -43,22 +45,13 @@ function reducer(view: ViewState, action: ReducerAction): ViewState {
 
 const TYPE_NAMES = { key: "キー", dial: "ダイヤル", scrollpad: "スクロールパッド", trackball: "トラックボール" } as const;
 
-function saveEditKey(saved: Saved, title: string) {
-  try {
-    const all = JSON.parse(localStorage.getItem(EDIT_KEYS_STORAGE) ?? "{}") as Record<string, unknown>;
-    all[saved.slug] = { editSecret: saved.editSecret, title, savedAt: new Date().toISOString() };
-    localStorage.setItem(EDIT_KEYS_STORAGE, JSON.stringify(all));
-  } catch {
-    // localStorage が使えない環境(プライベートブラウズ等)では保存しない。画面のURLを控えてもらう
-  }
-}
-
 export function LayoutEditor({
   physicalLayout,
   initialState,
   draftKey,
   forkedFrom,
   devMode,
+  edit,
 }: {
   physicalLayout: KeyboardPhysicalLayout;
   initialState: EditorState;
@@ -68,12 +61,16 @@ export function LayoutEditor({
   forkedFrom?: { slug: string; title: string };
   /** 開発環境か(テスト投稿のチェックボックスを出す) */
   devMode: boolean;
+  /** 編集モード: 保存すると、この配列を更新する(新しい配列は作らない) */
+  edit?: { slug: string; secret: string };
 }) {
   const [view, dispatch] = useReducer(reducer, { history: createHistory(initialState), draftRestored: false });
   const { history, draftRestored } = view;
   const state = history.present;
   const [errors, setErrors] = useState<string[]>([]);
   const [saved, setSaved] = useState<Saved | null>(null);
+  /** 編集モードで保存・削除が終わったとき */
+  const [editDone, setEditDone] = useState<"updated" | "deleted" | null>(null);
   const [testPost, setTestPost] = useState(devMode);
   const [isPending, startTransition] = useTransition();
   /** タップで選んだ一覧のキー(次にキー図のキーをタップすると置かれる) */
@@ -108,7 +105,7 @@ export function LayoutEditor({
 
   // 入力のたびに下書きを保存する(保存が終わった後は保存しない)
   useEffect(() => {
-    if (!loaded.current || saved) return;
+    if (!loaded.current || saved || editDone) return;
     if (skipNextSave.current) {
       skipNextSave.current = false;
       return;
@@ -118,7 +115,7 @@ export function LayoutEditor({
     } catch {
       // 保存できない環境では何もしない
     }
-  }, [state, storageKey, saved]);
+  }, [state, storageKey, saved, editDone]);
 
   // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y(Macは⌘)で元に戻す・やり直す。入力欄の中では、入力欄の元に戻すを優先する
   useEffect(() => {
@@ -237,23 +234,54 @@ export function LayoutEditor({
     dispatch({ type: "restore", state: initialState, draftRestored: false });
   }
 
+  function clearDraft() {
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {}
+  }
+
   function save() {
     setErrors([]);
     startTransition(async () => {
+      if (edit) {
+        const result = await updateLayoutAction(edit.slug, edit.secret, toLayoutInput(state));
+        if (!result.ok) {
+          setErrors(result.errors);
+          return;
+        }
+        clearDraft();
+        setEditDone("updated");
+        return;
+      }
       const result = await submitLayoutAction(toLayoutInput(state), testPost);
       if (!result.ok) {
         setErrors(result.errors);
         return;
       }
-      saveEditKey(result, state.title.trim());
-      try {
-        localStorage.removeItem(storageKey);
-      } catch {}
+      saveEditKey(result.slug, result.editSecret, state.title.trim());
+      clearDraft();
       setSaved({ slug: result.slug, editSecret: result.editSecret });
     });
   }
 
+  function remove() {
+    if (!edit) return;
+    if (!window.confirm("この配列を削除します。削除すると元に戻せません。よろしいですか?")) return;
+    setErrors([]);
+    startTransition(async () => {
+      const result = await deleteLayoutAction(edit.slug, edit.secret);
+      if (!result.ok) {
+        setErrors(result.errors);
+        return;
+      }
+      removeEditKey(edit.slug);
+      clearDraft();
+      setEditDone("deleted");
+    });
+  }
+
   if (saved) return <SavedView saved={saved} title={state.title.trim()} />;
+  if (edit && editDone) return <EditDoneView slug={edit.slug} done={editDone} title={state.title.trim()} />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -440,7 +468,7 @@ export function LayoutEditor({
       </section>
 
       <section className="flex flex-col gap-3 border-t border-zinc-200 pt-4">
-        {devMode && (
+        {devMode && !edit && (
           <label className="flex items-center gap-2 text-sm text-amber-800">
             <input type="checkbox" checked={testPost} onChange={(e) => setTestPost(e.target.checked)} />
             テスト投稿にする(一覧に出さない。開発環境だけの項目です)
@@ -460,12 +488,58 @@ export function LayoutEditor({
             disabled={isPending}
             className="rounded-md bg-zinc-900 px-6 py-3 text-base font-bold text-white hover:bg-zinc-700 disabled:opacity-50"
           >
-            {isPending ? "保存しています…" : "保存して共有URLを発行する"}
+            {isPending ? "保存しています…" : edit ? "変更を保存する" : "保存して共有URLを発行する"}
           </button>
         </div>
         <p className="text-xs text-zinc-500">入力途中の内容は、このブラウザに下書きとして自動で保存されます。</p>
       </section>
+
+      {edit && (
+        <section className="flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50 p-4">
+          <h2 className="text-base font-bold text-red-800">この配列を削除する</h2>
+          <p className="text-sm text-red-800">削除すると、配列のページも共有したURLも見られなくなります。元に戻せません。</p>
+          <div>
+            <button
+              type="button"
+              onClick={remove}
+              disabled={isPending}
+              className="rounded-md border border-red-400 bg-white px-4 py-2 text-sm font-bold text-red-700 hover:bg-red-100 disabled:opacity-50"
+            >
+              この配列を削除する
+            </button>
+          </div>
+        </section>
+      )}
     </div>
+  );
+}
+
+function EditDoneView({ slug, done, title }: { slug: string; done: "updated" | "deleted"; title: string }) {
+  return (
+    <section role="status" className="flex flex-col gap-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 p-5">
+      {done === "updated" ? (
+        <>
+          <h2 className="text-xl font-bold">{`「${title}」の変更を保存しました`}</h2>
+          <p className="text-sm text-zinc-700">
+            Xのカード画像は一度読み込まれるとしばらく更新されないことがあります。最新の見た目を確認したい場合は、Xのカード検証ツールなどをお試しください。
+          </p>
+          <div>
+            <Link href={`/k/${slug}`} className="inline-block rounded-md bg-zinc-900 px-5 py-2.5 font-bold text-white hover:bg-zinc-700">
+              配列のページを見る
+            </Link>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 className="text-xl font-bold">{`「${title}」を削除しました`}</h2>
+          <div>
+            <Link href="/" className="inline-block rounded-md bg-zinc-900 px-5 py-2.5 font-bold text-white hover:bg-zinc-700">
+              配列の一覧へ
+            </Link>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
