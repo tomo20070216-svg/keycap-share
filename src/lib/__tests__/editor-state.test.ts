@@ -39,7 +39,7 @@ describe("エディタの状態", () => {
     expect(label(s, 0, "L-DIAL", "cw")).toBeUndefined();
   });
 
-  it("レイヤーを追加・名前変更・削除できる。追加は10個まで", () => {
+  it("レイヤーを追加・名前変更・削除できる。追加は通常を含めて8個まで", () => {
     let s = run(initial(), { type: "addLayer" });
     expect(s.layers.map((l) => l.layerNumber)).toEqual([0, 1, 2, 3]);
     expect(s.currentLayer).toBe(3);
@@ -49,6 +49,7 @@ describe("エディタの状態", () => {
     expect(s.layers.map((l) => l.layerNumber)).toEqual([0, 1, 2]);
     expect(s.currentLayer).toBe(0);
     const full = run(initial(), ...Array.from({ length: 20 }, () => ({ type: "addLayer" }) as EditorAction));
+    expect(MAX_LAYERS).toBe(8); // 通常を含めて8つ(人間の決定、2026-09-30)
     expect(full.layers).toHaveLength(MAX_LAYERS);
   });
 

@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import { orcaEcho } from "@/keyboards/orca-echo";
 import { validateCombos, validateLayersAgainstPhysicalLayout } from "@/lib/layout-validation";
-import { LayoutInputSchema, type KeyboardPhysicalLayout, type LayoutInput } from "@/lib/schemas";
+import { LayoutInputSchema, MAX_LAYERS, type KeyboardPhysicalLayout, type LayoutInput } from "@/lib/schemas";
 import { checkDescriptionUrls } from "@/lib/spam-rules";
 
 /**
@@ -34,7 +34,7 @@ function describeIssue(issue: z.core.$ZodIssue): string {
     case "tags":
       return "タグは10個まで、1つ20文字以内にしてください。";
     case "layers":
-      if (issue.path.length === 1) return "レイヤーは1〜10個にしてください。";
+      if (issue.path.length === 1) return `レイヤーは通常を含めて1〜${MAX_LAYERS}個にしてください。`;
       if (third === "layerName") return "レイヤー名を入力してください(1〜40文字)。";
       if (third === "assignments" && fifth === "label") return "キーの表示名は1〜40文字にしてください。";
       if (third === "assignments") return "1つのレイヤーの割り当てが多すぎます(300件まで)。";

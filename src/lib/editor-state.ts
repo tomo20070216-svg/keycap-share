@@ -1,4 +1,5 @@
 import type { Action, Combo, KeyboardPhysicalLayout, Layer, LayoutInput, Macro } from "@/lib/schemas";
+import { MAX_LAYERS } from "@/lib/schemas";
 
 /**
  * 投稿エディタの状態と操作(P5-2〜P5-5)。画面の部品から切り離した純粋な関数なので、テストで確認できる。
@@ -46,7 +47,8 @@ export type EditorAction =
   | { type: "setMacro"; index: number; field: "name" | "description"; value: string }
   | { type: "removeMacro"; index: number };
 
-export const MAX_LAYERS = 10;
+/** レイヤーの数の上限(schemas.ts と同じ値。通常を含めて8つ) */
+export { MAX_LAYERS };
 
 /** 番号が最小のレイヤー(基本レイヤー)。削除できない */
 export function baseLayerNumber(layers: Layer[]): number {

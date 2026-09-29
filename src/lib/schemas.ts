@@ -119,6 +119,9 @@ export type Macro = z.infer<typeof MacroSchema>;
  * 配列(layout)の新規作成時に受け取る入力の形。
  * サーバー側で id・slug・editSecretHash・createdAt 等を付与してDBに保存する。
  */
+/** 1つの配列のレイヤーの数の上限(基本レイヤー(通常)を含めて8つ。人間の決定、2026-09-30。以前は10) */
+export const MAX_LAYERS = 8;
+
 export const LayoutInputSchema = z.object({
   keyboardId: z.string().min(1),
   title: z.string().min(1).max(80),
@@ -126,7 +129,7 @@ export const LayoutInputSchema = z.object({
   authorName: z.string().max(40).optional(), // 自由入力ニックネーム(Xアカウント等と連携しない)
   forkedFromLayoutId: z.string().uuid().optional(), // 「コピーして編集」機能で使う複製元ID
   tags: z.array(z.string().min(1).max(20)).max(10).default([]),
-  layers: z.array(LayerSchema).min(1).max(10), // レイヤー数の上限
+  layers: z.array(LayerSchema).min(1).max(MAX_LAYERS), // レイヤー数の上限(基本レイヤーを含めて8つ。人間の決定、2026-09-30)
   combos: z.array(ComboSchema).max(50).default([]),
   macros: z.array(MacroSchema).max(50).default([]),
 });

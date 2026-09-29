@@ -35,7 +35,7 @@ describe("validateSubmission エディタからの投稿の検証", () => {
 
   it("大きすぎる入力は拒否する(レイヤー11個・割り当て301件・説明2001文字・タグ11個)", () => {
     const layers11 = Array.from({ length: 11 }, (_, n) => ({ layerNumber: n, layerName: `L${n}`, assignments: [] }));
-    expect(errorsOf({ ...valid, layers: layers11 })).toEqual(["レイヤーは1〜10個にしてください。"]);
+    expect(errorsOf({ ...valid, layers: layers11 })).toEqual(["レイヤーは通常を含めて1〜8個にしてください。"]);
     const many = Array.from({ length: 301 }, () => ({ elementId: "L-0-0", action: "press", label: "x" }));
     expect(errorsOf({ ...valid, layers: [{ layerNumber: 0, layerName: "通常", assignments: many }] })).toEqual([
       "1つのレイヤーの割り当てが多すぎます(300件まで)。",
@@ -47,7 +47,7 @@ describe("validateSubmission エディタからの投稿の検証", () => {
   });
 
   it("レイヤーが0個・キーの表示名が長すぎる場合", () => {
-    expect(errorsOf({ ...valid, layers: [] })).toEqual(["レイヤーは1〜10個にしてください。"]);
+    expect(errorsOf({ ...valid, layers: [] })).toEqual(["レイヤーは通常を含めて1〜8個にしてください。"]);
     expect(
       errorsOf({ ...valid, layers: [{ layerNumber: 0, layerName: "通常", assignments: [{ elementId: "L-0-0", action: "press", label: "あ".repeat(41) }] }] })
     ).toEqual(["キーの表示名は1〜40文字にしてください。"]);
@@ -69,5 +69,17 @@ describe("validateSubmission エディタからの投稿の検証", () => {
   it("形がまったく違う入力(null・文字列)も例外にならずエラーを返す", () => {
     expect(validateSubmission(null).ok).toBe(false);
     expect(validateSubmission("abc").ok).toBe(false);
+  });
+});
+
+describe("レイヤーの数の上限(通常を含めて8つ。2026-09-30)", () => {
+  const base = { keyboardId: "orca-echo", title: "t" };
+  const layers = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ layerNumber: i, layerName: i === 0 ? "通常" : `fn${i}`, assignments: [] }));
+  it("8つまでは受け付け、9つはエラー文", () => {
+    expect(validateSubmission({ ...base, layers: layers(8) }).ok).toBe(true);
+    const r = validateSubmission({ ...base, layers: layers(9) });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors).toContain("レイヤーは通常を含めて1〜8個にしてください。");
   });
 });
