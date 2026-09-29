@@ -1097,12 +1097,17 @@
       "phase": 6,
       "role": "executor",
       "task": "Supabaseの自動停止対策: Vercelの定期実行(Cron、1日1回)で、DBに軽くアクセスするルートを呼ぶ。ルートは Vercel からの呼び出し以外は受け付けない",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "定期実行の設定(vercel.json)とルートがあり、手元で呼び出してDBにアクセスできることを確認している",
         "合言葉(CRON_SECRET)のない呼び出しは拒否されることを確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "vercel.json(毎日1回 /api/keepalive)と src/app/api/keepalive/route.ts、src/lib/cron-auth.ts(テスト3件)を作成。仕様はVercel公式ドキュメントで確認",
+        "手元で本番と同じビルドを起動して確認: 合言葉なし・違う合言葉は401、正しい合言葉では DB にアクセスして {\"ok\":true}(evidence/p6-6/README.md)",
+        "本番では人間が Vercel に CRON_SECRET を設定する必要がある(docs/operations.md に記載)",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P6-5"
       ]
@@ -1112,12 +1117,16 @@
       "phase": 6,
       "role": "executor",
       "task": "結合テストの後片付け: テストの中で作ったテスト投稿は、テストの最後に自動で削除する(テストが自分で作ったデータに限り、承認なしで削除してよい。人間の許可 2026-09-29)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "結合テストを実行した後、テスト投稿がDBに残らないことを確認している",
         "確認用に残す配列(工場出荷時配列・コンボのサンプル配列)は削除されない"
       ],
-      "evidence": [],
+      "evidence": [
+        "結合テストのテスト投稿(P5-1・P6-2)、投稿数の記録(P6-4)、報告(P6-5)は、いずれもテストの最後に自動で削除する(afterAll)",
+        "結合テスト19件の実行後、DBには確認用の配列2件と人間の投稿だけが残り、submission_events・reports は0件であることを確認",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P6-6"
       ]
