@@ -22,3 +22,6 @@
 
 ## 単体テスト
 `src/lib/__tests__/tag-suggestions.test.ts`(候補の並び・書き方をそろえる・付ける/外す・10個の上限・おすすめの決まりごと)。`npm test` 17ファイル135件、`tsc`・`eslint`・`npm run build` 成功。
+
+## 本番での確認(評価役、https://keycap-share.vercel.app/new 、push a32bf7c..ef7b974 のあと)
+上の画面の確認 1〜6 を本番でも行い、同じ結果。投稿はしていない(確認後に下書きを消した)。
