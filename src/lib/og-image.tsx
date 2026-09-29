@@ -26,9 +26,15 @@ function loadFont(): Promise<Buffer> {
   return fontPromise;
 }
 
-/** 画像URLに付ける版(配列の更新日時のミリ秒) */
+/**
+ * 画像の見た目(サイト名など)を変えたときに増やす番号。画像URLが変わり、長く保存された古い画像の代わりに
+ * 新しい画像が作られる。2: サイト名を「KeyMap Hub」に変更(2026-09-29)
+ */
+export const OG_DESIGN_VERSION = 2;
+
+/** 画像URLに付ける版(配列の更新日時のミリ秒。見た目を変えたあとは、後ろに見た目の番号を付ける) */
 export function ogImageVersion(layout: Layout): string {
-  return String(Date.parse(layout.updatedAt));
+  return `${Date.parse(layout.updatedAt)}-${OG_DESIGN_VERSION}`;
 }
 
 /** OGP画像のURL(パス)。レイヤー番号を省略すると配列ページ用(通常レイヤー) */

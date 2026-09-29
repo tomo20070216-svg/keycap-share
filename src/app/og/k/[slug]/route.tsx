@@ -1,7 +1,7 @@
 import { getLayoutPageData } from "@/lib/layout-page-data";
 import { baseLayerOf, renderOgImage } from "@/lib/og-image";
 
-/** 配列ページ用のOGP画像(通常レイヤー)。例: /og/k/abc123?v=1759067718961 */
+/** 配列ページ用のOGP画像(通常レイヤー)。例: /og/k/abc123?v=1759067718961-2 */
 export const runtime = "nodejs";
 
 export async function GET(request: Request, context: RouteContext<"/og/k/[slug]">) {

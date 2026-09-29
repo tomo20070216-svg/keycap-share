@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { orcaEcho } from "@/keyboards/orca-echo";
 import { KeyboardPhysicalLayoutSchema, ELEMENT_ACTIONS } from "@/lib/schemas";
 
-describe("orcaEcho 仮の物理レイアウト", () => {
+describe("orcaEcho 物理レイアウト", () => {
   it("Zodスキーマの検証を通る", () => {
     expect(() => KeyboardPhysicalLayoutSchema.parse(orcaEcho)).not.toThrow();
   });
 
-  it("仮の値であることが明示されている", () => {
-    expect(orcaEcho.isProvisional).toBe(true);
+  it("人間が実機と見比べて確認済み(仮の値ではない。2026-09-29、P7-2)", () => {
+    expect(orcaEcho.isProvisional).toBe(false);
   });
 
   it("キー要素が49個ある(左25+右24、docs/keyboards/orca-echo.md準拠)", () => {

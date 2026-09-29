@@ -55,6 +55,8 @@ type EditableKeymapSideProps = {
   side?: Side;
   /** ドラッグ中に、離したら入る場所(緑の枠 = 置ける/入れ替えられる、赤の枠 = できない) */
   dropTarget?: { elementId: string; allowed: boolean } | null;
+  /** タップでの入れ替え(P7-3)で選んだ入れ替え元(紫の点線の枠) */
+  swapSourceId?: string | null;
 };
 
 function EditableKeymapSide({
@@ -67,6 +69,7 @@ function EditableKeymapSide({
   onElementPointerDown,
   side,
   dropTarget,
+  swapSourceId,
 }: EditableKeymapSideProps) {
   // 描きかけのコンボ(キーが2つ未満)は番号を付けない
   const drawableCombos = combos.filter((c) => c.elementIds.length >= 2);
@@ -83,6 +86,7 @@ function EditableKeymapSide({
           const selected = !picking && item.elementId === selectedElementId;
           const picked = picking && pickedElementIds.includes(item.elementId);
           const dropHere = dropTarget?.elementId === item.elementId ? dropTarget : null;
+          const swapSource = !picking && item.elementId === swapSourceId;
           // コンボのキーを選んでいるときは、キー以外は選べない
           const disabled = picking && item.type !== "key";
           const typeName = TYPE_NAMES[item.type];
@@ -92,8 +96,10 @@ function EditableKeymapSide({
               key={item.elementId}
               type="button"
               data-element-id={item.elementId}
-              aria-label={picking ? `${name}をコンボの対象にする` : `${name}の割り当てを編集`}
-              aria-pressed={picking ? picked : selected}
+              aria-label={
+                picking ? `${name}をコンボの対象にする` : swapSourceId ? `${name}と入れ替える` : `${name}の割り当てを編集`
+              }
+              aria-pressed={picking ? picked : selected || swapSource}
               disabled={disabled}
               // マウス・指のタップは onPointerDown からの処理(useKeyDrag)で扱う。click はキーボードで押したときだけ
               onClick={(e) => {
@@ -110,11 +116,13 @@ function EditableKeymapSide({
                 borderRadius: item.type === "trackball" || item.type === "scrollpad" ? Math.min(b.width, b.height) / 2 : 8,
                 outline: dropHere
                   ? `4px solid ${dropHere.allowed ? "#16a34a" : "#dc2626"}`
-                  : selected
-                    ? "3px solid #f59e0b"
-                    : picked
-                      ? "3px dashed #2563eb"
-                      : "none",
+                  : swapSource
+                    ? "4px dashed #7c3aed"
+                    : selected
+                      ? "3px solid #f59e0b"
+                      : picked
+                        ? "3px dashed #2563eb"
+                        : "none",
                 outlineOffset: 2,
                 backgroundColor: dropHere ? (dropHere.allowed ? "rgba(22,163,74,0.25)" : "rgba(220,38,38,0.2)") : "transparent",
                 cursor: disabled ? "not-allowed" : "pointer",

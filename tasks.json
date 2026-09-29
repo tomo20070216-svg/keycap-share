@@ -1151,6 +1151,50 @@
       "dependencies": [
         "P6-7"
       ]
+    },
+    {
+      "id": "P7-1",
+      "phase": 7,
+      "role": "executor",
+      "task": "サイト名を「KeyMap Hub」にする(人間の決定、2026-09-29)。ヘッダー・タイトル・OGP画像・og:site_name。既存のOGP画像が新しい名前で作り直されるようにする。URL・リポジトリ名・ブラウザの保存名は変えない",
+      "status": "in_progress",
+      "passes": [
+        "画面・タイトル・OGP画像・og:site_name に「KeyMap Hub」が出ることの確認結果がある",
+        "既存の配列のOGP画像のURLが変わり、新しい名前の画像になることの確認結果がある",
+        "docs の「サイト名は仮」の記述が更新されている"
+      ],
+      "dependencies": [
+        "P6-8"
+      ]
+    },
+    {
+      "id": "P7-2",
+      "phase": 7,
+      "role": "executor",
+      "task": "Orca echo の座標を確認済みにする(人間が実機と見比べて「位置はあっています」と確認、2026-09-29)。isProvisional を false にし、コメント・テスト・docs を更新する。本番DBの keyboards の印は人間が SQL Editor で直す",
+      "status": "in_progress",
+      "passes": [
+        "orca-echo.ts の isProvisional が false で、コメントに確認日と確認者(人間)が書かれている",
+        "本番DBの keyboards.is_provisional が false であることの確認結果がある(変更は人間が実行)"
+      ],
+      "dependencies": [
+        "P6-8"
+      ]
+    },
+    {
+      "id": "P7-3",
+      "phase": 7,
+      "role": "executor",
+      "task": "編集画面で、タップだけで左手と右手をまたいでキーの割り当てを入れ替えられるようにする(「ほかのキーと入れ替える」→相手をタップ)。スマホで左右が上下に分かれていても使える",
+      "status": "in_progress",
+      "passes": [
+        "スマホの幅で、左手のキーと右手のキーを入れ替えられることの画面での確認結果(スクリーンショット)がある",
+        "種類が違う相手・やめる・元に戻すが正しく動くことの確認結果がある",
+        "単体テスト・型チェック・lint・ビルドが成功している"
+      ],
+      "dependencies": [
+        "P6-8"
+      ]
     }
   ]
 }

@@ -24,12 +24,15 @@ export function ElementPanel({
   elementId,
   onChange,
   onClose,
+  onStartSwap,
 }: {
   physicalLayout: KeyboardPhysicalLayout;
   layer: Layer;
   elementId: string;
   onChange: (action: Action, label: string) => void;
   onClose: () => void;
+  /** 「ほかのキーと入れ替える」を押したとき(P7-3)。次にタップした相手と割り当てを入れ替える */
+  onStartSwap?: () => void;
 }) {
   const element = physicalLayout.elements.find((e) => e.id === elementId);
   if (!element) return null;
@@ -44,6 +47,18 @@ export function ElementPanel({
           閉じる
         </button>
       </div>
+      {onStartSwap && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onStartSwap}
+            className="rounded-md border border-violet-400 bg-white px-3 py-1.5 text-sm font-bold text-violet-800 hover:bg-violet-50"
+          >
+            {`ほかの${typeName}と入れ替える`}
+          </button>
+          <span className="text-xs text-zinc-600">左手・右手をまたいで、このレイヤーの割り当てをまるごと入れ替えます。</span>
+        </div>
+      )}
       <p className="text-xs text-zinc-600">
         キーに表示する名前を入力します(例: Ctrl、変換、左クリック)。空にすると、その操作の割り当てがなくなります。
       </p>

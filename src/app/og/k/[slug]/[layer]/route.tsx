@@ -2,7 +2,7 @@ import { getLayoutPageData } from "@/lib/layout-page-data";
 import { findLayerByParam } from "@/lib/layout-page-utils";
 import { renderOgImage } from "@/lib/og-image";
 
-/** レイヤーページ用のOGP画像(そのレイヤー)。例: /og/k/abc123/1?v=1759067718961 */
+/** レイヤーページ用のOGP画像(そのレイヤー)。例: /og/k/abc123/1?v=1759067718961-2 */
 export const runtime = "nodejs";
 
 export async function GET(request: Request, context: RouteContext<"/og/k/[slug]/[layer]">) {

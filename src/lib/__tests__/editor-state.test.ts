@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { orcaEchoFactoryDefaultLayers } from "@/keyboards/orca-echo-factory-default";
+import { orcaEcho } from "@/keyboards/orca-echo";
 import {
   MAX_LAYERS,
   createEditorState,
+  decideTapSwap,
   editorReducer,
   parseTags,
   toLayoutInput,
@@ -137,5 +139,21 @@ describe("toLayoutInput", () => {
     const r = validateSubmission(toLayoutInput(initial()));
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.errors).toContain("タイトルを入力してください(1〜80文字)。");
+  });
+});
+
+describe("タップでの入れ替え(P7-3)", () => {
+  const leftKey = orcaEcho.elements.find((e) => e.type === "key" && e.side === "left")!.id;
+  const rightKey = orcaEcho.elements.find((e) => e.type === "key" && e.side === "right")!.id;
+  const dial = orcaEcho.elements.find((e) => e.type === "dial")!.id;
+
+  it("左手のキーと右手のキーは入れ替えられる", () => {
+    expect(decideTapSwap(orcaEcho, leftKey, rightKey)).toBe("swap");
+  });
+  it("同じ要素をもう一度タップすると、やめる", () => {
+    expect(decideTapSwap(orcaEcho, leftKey, leftKey)).toBe("cancel");
+  });
+  it("種類が違う相手(キーとダイヤル)とは入れ替えられない", () => {
+    expect(decideTapSwap(orcaEcho, leftKey, dial)).toBe("mismatch");
   });
 });

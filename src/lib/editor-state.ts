@@ -227,6 +227,15 @@ export function canSwapElements(physicalLayout: KeyboardPhysicalLayout, from: st
   return !!a && !!b && a.type === b.type;
 }
 
+/**
+ * タップでの入れ替え(P7-3)で、入れ替え元を選んだあとに要素をタップしたときの結果。
+ * 同じ要素 = やめる、同じ種類 = 入れ替える、種類が違う = 入れ替えられない(選び直してもらう)
+ */
+export function decideTapSwap(physicalLayout: KeyboardPhysicalLayout, from: string, to: string): "cancel" | "swap" | "mismatch" {
+  if (from === to) return "cancel";
+  return canSwapElements(physicalLayout, from, to) ? "swap" : "mismatch";
+}
+
 /** タグの文字列(空白・読点区切り)を配列にする。先頭の # は外し、重複は除く */
 export function parseTags(text: string): string[] {
   const tags = text

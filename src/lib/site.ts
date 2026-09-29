@@ -1,5 +1,9 @@
-/** サイト名(仮。正式名は未確定。docs/voice.md。人間の決定 2026-09-29) */
-export const SITE_NAME = "keycap-share";
+/**
+ * サイト名(人間の決定 2026-09-29。それまでの仮の名前は「keycap-share」)。
+ * URL(keycap-share.vercel.app)・リポジトリ名・ブラウザの保存名(keycap-share:...)は、
+ * 共有済みのリンクや保存済みの下書き・編集用の鍵を壊さないため、古い名前のまま変えない。
+ */
+export const SITE_NAME = "KeyMap Hub";
 
 /**
  * サイトのURL(メタタグの絶対URLの土台 metadataBase に使う)。

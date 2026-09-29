@@ -12,13 +12,14 @@ import { KeyPalette } from "@/components/editor/KeyPalette";
 import { LayerTabs } from "@/components/editor/LayerTabs";
 import { useKeyDrag, type DragSource } from "@/components/editor/useKeyDrag";
 import { canRedo, canUndo, createHistory, historyReducer, type EditorHistory, type HistoryAction } from "@/lib/editor-history";
-import { canSwapElements, toLayoutInput, type EditorState } from "@/lib/editor-state";
+import { canSwapElements, decideTapSwap, toLayoutInput, type EditorState } from "@/lib/editor-state";
 import { removeEditKey, saveEditKey } from "@/lib/edit-keys";
 import type { KeyboardPhysicalLayout } from "@/lib/schemas";
 
 /**
  * 投稿エディタ(P5-2〜P5-6、P5-10〜P5-12)。
  * - キーの一覧からキー図へドラッグ&ドロップ(またはタップ→タップ)で置ける。キー図の中のドラッグは入れ替え
+ * - 「ほかのキーと入れ替える」→相手をタップでも入れ替えられる(P7-3。スマホで左右が上下に分かれていても使える)
  * - 「元に戻す」「やり直す」
  * - 入力途中の内容は、このブラウザに下書きとして自動保存する(再読み込みしても戻る)
  * - 保存すると、配列ページのURLと編集用URL(秘密キー入り)を表示し、編集用URLはこのブラウザにも保存する
@@ -77,6 +78,8 @@ export function LayoutEditor({
   const [armedLabel, setArmedLabel] = useState<string | null>(null);
   /** ダイヤル等に置くとき、どの操作に入れるか選んでもらう */
   const [pendingDrop, setPendingDrop] = useState<{ elementId: string; label: string } | null>(null);
+  /** タップでの入れ替え(P7-3)の入れ替え元。次にタップした相手と割り当てを入れ替える */
+  const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
   /** ドラッグ&ドロップの結果のお知らせ */
   const [notice, setNotice] = useState<string | null>(null);
   const loaded = useRef(false);
@@ -133,6 +136,8 @@ export function LayoutEditor({
 
   const currentLayer = state.layers.find((l) => l.layerNumber === state.currentLayer) ?? state.layers[0];
   const pickedElementIds = state.comboPicking === null ? null : (state.combos[state.comboPicking]?.elementIds ?? []);
+  // コンボのキーを選び始めたら、タップでの入れ替えはやめる(描画中に自分の状態を直す、React の決まった書き方)
+  if (state.comboPicking !== null && swapSourceId !== null) setSwapSourceId(null);
 
   const elementOf = (id: string) => physicalLayout.elements.find((e) => e.id === id);
   const elementName = (id: string) => {
@@ -158,6 +163,7 @@ export function LayoutEditor({
   function handleDrop(source: DragSource, targetId: string | null) {
     // コンボのキーを選んでいる間は、ドラッグでの入れ替え・配置はしない
     if (!targetId || state.comboPicking !== null) return;
+    setSwapSourceId(null);
     if (source.kind === "palette") {
       placeLabel(source.label, targetId);
       return;
@@ -181,7 +187,32 @@ export function LayoutEditor({
   }
 
   function toggleArmed(label: string) {
+    setSwapSourceId(null);
     setArmedLabel((current) => (current === label ? null : label));
+  }
+
+  /** 選んでいる要素を入れ替え元にして、相手のタップを待つ */
+  function startTapSwap(elementId: string) {
+    setArmedLabel(null);
+    setSwapSourceId(elementId);
+    dispatch({ type: "selectElement", elementId: null });
+    setNotice(null);
+  }
+
+  /** 入れ替え元を選んだあとに要素をタップしたとき */
+  function finishTapSwap(from: string, to: string) {
+    const result = decideTapSwap(physicalLayout, from, to);
+    if (result === "mismatch") {
+      setNotice(`${elementName(to)}とは種類が違うので入れ替えられません。${TYPE_NAMES[elementOf(from)!.type]}を選んでください。`);
+      return;
+    }
+    setSwapSourceId(null);
+    if (result === "cancel") {
+      setNotice("入れ替えをやめました。");
+      return;
+    }
+    dispatch({ type: "swapElements", from, to });
+    setNotice(`${elementName(from)}と${elementName(to)}の割り当てを入れ替えました(${currentLayer.layerName})。`);
   }
 
   const drag = useKeyDrag(handleDrop, handleTap);
@@ -211,6 +242,8 @@ export function LayoutEditor({
   function handleElementClick(elementId: string) {
     if (state.comboPicking !== null) {
       dispatch({ type: "toggleComboElement", elementId });
+    } else if (swapSourceId) {
+      finishTapSwap(swapSourceId, elementId);
     } else if (armedLabel) {
       placeLabel(armedLabel, elementId);
     } else {
@@ -371,6 +404,21 @@ export function LayoutEditor({
             </button>
           </div>
         )}
+        {swapSourceId && state.comboPicking === null && (
+          <div role="status" className="flex flex-wrap items-center gap-3 rounded-md bg-violet-50 px-3 py-2 text-sm text-violet-900">
+            <span>{`${elementName(swapSourceId)}と入れ替える相手を、キー図でタップしてください(左手・右手どちらでも。スクロールしてから選べます)。`}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setSwapSourceId(null);
+                setNotice("入れ替えをやめました。");
+              }}
+              className="underline underline-offset-4"
+            >
+              やめる
+            </button>
+          </div>
+        )}
         {notice && (
           <p role="status" data-testid="drop-notice" className="text-sm text-zinc-700">
             {notice}
@@ -385,6 +433,7 @@ export function LayoutEditor({
           onElementClick={handleElementClick}
           onElementPointerDown={startElementDrag}
           dropTarget={dropPreview?.elementId ? { elementId: dropPreview.elementId, allowed: dropPreview.allowed } : null}
+          swapSourceId={state.comboPicking === null ? swapSourceId : null}
         />
         {pendingDrop && elementOf(pendingDrop.elementId) && (
           <ActionChooser
@@ -406,6 +455,12 @@ export function LayoutEditor({
             elementId={state.selectedElementId}
             onChange={(action, label) => dispatch({ type: "setAssignment", elementId: state.selectedElementId!, action, label })}
             onClose={() => dispatch({ type: "selectElement", elementId: null })}
+            // 同じ種類の要素がほかにないとき(Orca echo のダイヤルなど)は、入れ替える相手がいないので出さない
+            onStartSwap={
+              physicalLayout.elements.filter((e) => e.type === elementOf(state.selectedElementId!)?.type).length > 1
+                ? () => startTapSwap(state.selectedElementId!)
+                : undefined
+            }
           />
         )}
         {drag.ghost && (
