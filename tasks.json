@@ -643,7 +643,7 @@
       "phase": 4,
       "role": "executor",
       "task": "Xの共有ボタン: サイト側に文面の編集欄(初期値: タイトル・機種名・URL・ハッシュタグ #OrcaEcho #分割キーボード)を置き、ボタンでXの投稿画面(Web Intent)をその文面で開く。Xの開発者アカウントやAPIは使わない",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "編集欄の初期値が docs/voice.md の方針どおりである",
         "編集した文面でXの投稿画面が開くことを確認している(投稿画面のスクリーンショット。投稿はしない)"
@@ -652,7 +652,8 @@
         "src/components/SharePanel.tsx(文面の編集欄+Xで共有する)と src/lib/share.ts(文面の初期値・ハッシュタグ・Web IntentのURL。テスト3件)を作成。配列ページ・レイヤーページに配置",
         "文面の初期値は docs/voice.md のテンプレートどおり(evidence/p4-4/share-panel-initial.png)",
         "ヘッドレスChromeで、書き換えた文面がXの投稿画面のURL(https://x.com/intent/post?text=…&url=…)に正しく入ることを確認(evidence/p4-4/README.md)",
-        "未完了: Xの投稿画面が実際に開いた状態のスクリーンショット(Xへのログインが必要なため、本番反映後に人間が確認。P4-7)"
+        "人間が本番で「Xで共有する」からXの投稿画面を開き、初期値の文面と本番URLが入っていることを確認(evidence/p4-7/x-card-preview.png。投稿はしていない)",
+        "評価役確認: passes 2条件を確認した"
       ],
       "dependencies": [
         "P4-3"
@@ -699,12 +700,18 @@
       "phase": 4,
       "role": "reviewer",
       "task": "評価役が evals/acceptance.md フェーズ4の確認方法で確認する(フェーズ4の完了の目安)。人間がXの投稿画面でカードのプレビュー(画像つき)を確認する。実際の投稿は人間が判断して行う",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "本番のHTMLソースの該当箇所、生成されたOGP画像、Xでのカードのプレビューのスクリーンショットがそろっている",
         "本番への反映(push)は人間の承認を得てから行っている"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間の承認(push OK、2026-09-29)を得て main に push(c37e630..9358b7b)。Vercelの本番デプロイ後に確認",
+        "1. 本番のHTMLソース(User-Agent: Twitterbot/1.0)に twitter:card=summary_large_image、og:title、og:image(https://keycap-share.vercel.app/og/k/...?v=...)などが含まれる",
+        "2. 本番のOGP画像: PNG 1200×630(evidence/p4-7/prod-og-*.png)。CDNキャッシュが効き、同じURLの2回目は0.05秒(X-Vercel-Cache: HIT)",
+        "3. 人間がXの投稿画面で、画像つきのカードのプレビューが表示されることを確認(evidence/p4-7/x-card-preview.png。投稿はしていない)",
+        "評価役確認: passes 2条件と evals/acceptance.md フェーズ4の確認方法(HTMLソース・生成画像・Xでのプレビュー)を満たすことを確認した(evidence/p4-7/README.md)"
+      ],
       "dependencies": [
         "P4-6"
       ]
