@@ -189,6 +189,28 @@ export function LayoutEditor({
 
   const drag = useKeyDrag(handleDrop, handleTap);
 
+  /** ドラッグ中に、離したら何が起きるか(枠の色と、名前の下の説明) */
+  const dropPreview: { elementId: string | null; allowed: boolean; message: string } | null = (() => {
+    if (!drag.ghost) return null;
+    const over = drag.overElementId;
+    const source = drag.ghost.source;
+    if (!over) {
+      return { elementId: null, allowed: false, message: source.kind === "palette" ? "キーの上で離してください" : "入れ替えるキーの上で離してください" };
+    }
+    if (source.kind === "palette") {
+      const el = elementOf(over);
+      return {
+        elementId: over,
+        allowed: true,
+        message: el?.type === "key" ? `${elementName(over)}に置く` : `${elementName(over)}に置く(操作を選びます)`,
+      };
+    }
+    if (over === source.elementId) return { elementId: null, allowed: false, message: "入れ替えるキーの上で離してください" };
+    return canSwapElements(physicalLayout, source.elementId, over)
+      ? { elementId: over, allowed: true, message: `${elementName(over)}と入れ替え` }
+      : { elementId: over, allowed: false, message: "種類が違うので入れ替えられません" };
+  })();
+
   function handleElementClick(elementId: string) {
     if (state.comboPicking !== null) {
       dispatch({ type: "toggleComboElement", elementId });
@@ -334,6 +356,7 @@ export function LayoutEditor({
           pickedElementIds={pickedElementIds}
           onElementClick={handleElementClick}
           onElementPointerDown={startElementDrag}
+          dropTarget={dropPreview?.elementId ? { elementId: dropPreview.elementId, allowed: dropPreview.allowed } : null}
         />
         {pendingDrop && elementOf(pendingDrop.elementId) && (
           <ActionChooser
@@ -358,12 +381,27 @@ export function LayoutEditor({
           />
         )}
         {drag.ghost && (
+          // 指で隠れないよう、指やカーソルの少し上に出す
           <div
             aria-hidden
-            style={{ position: "fixed", left: drag.ghost.x + 8, top: drag.ghost.y + 8, pointerEvents: "none", zIndex: 50 }}
-            className="rounded-md bg-amber-400 px-2.5 py-1.5 text-sm font-bold text-zinc-900 shadow-lg"
+            data-testid="drag-ghost"
+            style={{
+              position: "fixed",
+              // 画面の右端からはみ出さないようにする(スマホ)
+              left: Math.max(4, Math.min(drag.ghost.x + 12, window.innerWidth - 220)),
+              top: Math.max(4, drag.ghost.y - 64),
+              maxWidth: 216,
+              pointerEvents: "none",
+              zIndex: 50,
+            }}
+            className="flex flex-col gap-0.5 rounded-md bg-zinc-900/90 px-2.5 py-1.5 text-white shadow-lg"
           >
-            {drag.ghost.label}
+            <span className="text-sm font-bold">{drag.ghost.label}</span>
+            {dropPreview && (
+              <span className={`text-xs font-bold ${dropPreview.elementId ? (dropPreview.allowed ? "text-green-300" : "text-red-300") : "text-zinc-300"}`}>
+                {dropPreview.message}
+              </span>
+            )}
           </div>
         )}
       </section>

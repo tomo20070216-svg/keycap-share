@@ -53,6 +53,8 @@ type EditableKeymapSideProps = {
   onElementPointerDown?: (elementId: string, e: React.PointerEvent) => void;
   /** 片側だけを描く */
   side?: Side;
+  /** ドラッグ中に、離したら入る場所(緑の枠 = 置ける/入れ替えられる、赤の枠 = できない) */
+  dropTarget?: { elementId: string; allowed: boolean } | null;
 };
 
 function EditableKeymapSide({
@@ -64,6 +66,7 @@ function EditableKeymapSide({
   onElementClick,
   onElementPointerDown,
   side,
+  dropTarget,
 }: EditableKeymapSideProps) {
   // 描きかけのコンボ(キーが2つ未満)は番号を付けない
   const drawableCombos = combos.filter((c) => c.elementIds.length >= 2);
@@ -79,6 +82,7 @@ function EditableKeymapSide({
           const b = diagramItemBox(item);
           const selected = !picking && item.elementId === selectedElementId;
           const picked = picking && pickedElementIds.includes(item.elementId);
+          const dropHere = dropTarget?.elementId === item.elementId ? dropTarget : null;
           // コンボのキーを選んでいるときは、キー以外は選べない
           const disabled = picking && item.type !== "key";
           const typeName = TYPE_NAMES[item.type];
@@ -103,10 +107,16 @@ function EditableKeymapSide({
                 width: b.width,
                 height: b.height,
                 transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined,
-                background: "transparent",
                 borderRadius: item.type === "trackball" || item.type === "scrollpad" ? Math.min(b.width, b.height) / 2 : 8,
-                outline: selected ? "3px solid #f59e0b" : picked ? "3px dashed #2563eb" : "none",
+                outline: dropHere
+                  ? `4px solid ${dropHere.allowed ? "#16a34a" : "#dc2626"}`
+                  : selected
+                    ? "3px solid #f59e0b"
+                    : picked
+                      ? "3px dashed #2563eb"
+                      : "none",
                 outlineOffset: 2,
+                backgroundColor: dropHere ? (dropHere.allowed ? "rgba(22,163,74,0.25)" : "rgba(220,38,38,0.2)") : "transparent",
                 cursor: disabled ? "not-allowed" : "pointer",
                 // 指でのドラッグ中に画面がスクロールしないようにする
                 touchAction: picking ? "auto" : "none",
