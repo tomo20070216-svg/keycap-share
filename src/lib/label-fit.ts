@@ -84,3 +84,21 @@ export function fitLabel(
   const widest = lines.reduce((a, b) => (estimateTextWidthEm(a) >= estimateTextWidthEm(b) ? a : b));
   return { fontSize: fitFontSize(widest, maxWidth, baseSize * 0.8), lines };
 }
+
+/**
+ * 1行に収まるよう文字サイズを決め、最小サイズでも収まらなければ末尾を「…」で省略する。
+ * OGP画像のタイトルなど、行数を増やせない場所で使う。
+ */
+export function fitSingleLine(
+  text: string,
+  maxWidth: number,
+  baseSize: number,
+  minSize: number
+): { text: string; fontSize: number } {
+  const fontSize = fitFontSize(text, maxWidth, baseSize, minSize);
+  // 浮動小数点の丸め誤差で「わずかに超えた」と判定しないよう、少しだけ余裕を持たせる
+  if (estimateTextWidthEm(text) * fontSize <= maxWidth + 1e-6) return { text, fontSize };
+  const chars = [...text];
+  while (chars.length > 0 && (estimateTextWidthEm(chars.join("")) + 1) * minSize > maxWidth) chars.pop();
+  return { text: `${chars.join("")}…`, fontSize: minSize };
+}

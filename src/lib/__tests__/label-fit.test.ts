@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estimateTextWidthEm, fitFontSize, fitLabel, splitIntoTwoLines } from "@/lib/label-fit";
+import { estimateTextWidthEm, fitFontSize, fitLabel, fitSingleLine, splitIntoTwoLines } from "@/lib/label-fit";
 
 describe("estimateTextWidthEm 文字幅の見積もり", () => {
   it("全角は1文字1em、半角は1文字0.62em", () => {
@@ -60,5 +60,23 @@ describe("splitIntoTwoLines 2行に分ける位置", () => {
     for (const text of ["とても長い表示名のキー", "音量アップ", "Ctrl+Shift+Esc"]) {
       expect(splitIntoTwoLines(text).join("")).toBe(text.replace(/ /g, ""));
     }
+  });
+});
+
+describe("fitSingleLine 1行に収める(OGP画像のタイトル用)", () => {
+  it("短い文字は基本サイズのまま", () => {
+    expect(fitSingleLine("Orca echo", 1000, 48, 28)).toEqual({ text: "Orca echo", fontSize: 48 });
+  });
+  it("長い文字は小さくして1行に収める", () => {
+    const r = fitSingleLine("あ".repeat(30), 1000, 48, 28);
+    expect(r.text).toBe("あ".repeat(30));
+    expect(r.fontSize).toBeLessThan(48);
+    expect(r.fontSize * 30).toBeLessThanOrEqual(1000 + 1e-6);
+  });
+  it("最小サイズでも収まらなければ末尾を…で省略し、幅に収まる", () => {
+    const r = fitSingleLine("あ".repeat(80), 1000, 48, 28);
+    expect(r.fontSize).toBe(28);
+    expect(r.text.endsWith("…")).toBe(true);
+    expect(estimateTextWidthEm(r.text) * 28).toBeLessThanOrEqual(1000);
   });
 });
