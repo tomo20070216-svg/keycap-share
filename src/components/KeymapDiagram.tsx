@@ -86,6 +86,13 @@ export function getKeymapDiagramSize(model: KeymapRenderModel, unit = DEFAULT_UN
   };
 }
 
+/**
+ * 要素の四角形の位置(ピクセル。回転前)。KeymapDiagram の描画と、エディタでクリック用のボタンを重ねる位置で共用する。
+ */
+export function diagramItemBox(item: RenderItem, unit = DEFAULT_UNIT) {
+  return box(item, unit);
+}
+
 function box(item: RenderItem, unit: number) {
   return {
     left: (item.x + PADDING + INSET) * unit,

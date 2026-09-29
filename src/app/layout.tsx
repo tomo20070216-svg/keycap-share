@@ -18,9 +18,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="text-lg font-bold tracking-tight">
               {SITE_NAME}
             </Link>
-            <nav className="text-sm">
+            <nav className="flex items-center gap-4 text-sm">
               <Link href="/" className="underline-offset-4 hover:underline">
                 配列の一覧
+              </Link>
+              <Link href="/new" className="rounded-md bg-zinc-900 px-3 py-1.5 font-bold text-white hover:bg-zinc-700">
+                配列を投稿する
               </Link>
             </nav>
           </div>

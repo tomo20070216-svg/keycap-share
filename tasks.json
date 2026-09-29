@@ -755,12 +755,17 @@
       "phase": 5,
       "role": "executor",
       "task": "エディタの土台 /new: タイトル(必須)・投稿者名・説明(なぜこの配置にしたか)・タグ。機種はOrca echoに固定。最初は工場出荷時配列が入った状態から始める",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "/new を開くと工場出荷時配列が入った状態のエディタが表示されるスクリーンショットがある",
         "タイトルが空のままでは保存できないことを確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "/new(src/app/new/page.tsx)と src/components/editor/LayoutEditor.tsx を作成。機種はOrca echo固定、工場出荷時配列から開始",
+        "スクリーンショット evidence/p5-editor/p5-2-initial.png。タイトルが空のまま保存すると「タイトルを入力してください(1〜80文字)。」(p5-2-title-required.png)",
+        "ヘッドレスChromeでの操作確認 evidence/p5-editor/cdp-editor.mjs は21/21成功(evidence/p5-editor/README.md)",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P5-1"
       ]
@@ -770,13 +775,18 @@
       "phase": 5,
       "role": "executor",
       "task": "キー図をクリックして割り当てを入力する。キーはタップと長押し、ダイヤル(右回し・左回し)・トラックボール(上下左右)・スクロールパッド(上下・タップ)は操作ごとに入力する。キー図の描画部品は1つのまま(クリック用のボタンを上に重ねる)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "キーをクリックして入力した表示名が、その場でキー図に反映されるスクリーンショットがある",
         "キー以外の要素(ダイヤル等)の操作も入力できることを確認している",
         "キー図の描画部品は画面・OGP画像と共用のまま(plan.md 方針3)"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/components/editor/EditableKeymap.tsx(KeymapDiagramの上に同じ座標で透明なボタンを重ねる。描画部品は共用のまま)と ElementPanel.tsx を作成",
+        "キーをクリックして入力した「半角/全角」「長押し: Ctrl」がその場でキー図に反映(p5-3-key-edited.png)。ダイヤル(右回し・左回し)・トラックボール(上下左右)も入力できキー図に反映(p5-3-dial-trackball.png)",
+        "ヘッドレスChromeでの操作確認 evidence/p5-editor/cdp-editor.mjs は21/21成功(evidence/p5-editor/README.md)",
+        "評価役確認: passes 3条件を確認した"
+      ],
       "dependencies": [
         "P5-2"
       ]
@@ -786,12 +796,17 @@
       "phase": 5,
       "role": "executor",
       "task": "レイヤーの追加・削除・名前の変更。基本レイヤー(番号が最小のレイヤー)は削除できない",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "レイヤーを追加・名前変更・削除できることを確認している",
         "基本レイヤーを削除できないことを確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/components/editor/LayerTabs.tsx を作成。状態の操作は src/lib/editor-state.ts(テストあり)",
+        "追加・名前変更(記号)・削除ができ、基本レイヤーには削除ボタンがなく「基本レイヤーは削除できません」と表示(p5-4-layer-added.png)",
+        "ヘッドレスChromeでの操作確認 evidence/p5-editor/cdp-editor.mjs は21/21成功(evidence/p5-editor/README.md)",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P5-3"
       ]
@@ -801,12 +816,17 @@
       "phase": 5,
       "role": "executor",
       "task": "コンボ(対象キーを2つ以上選ぶ・表示名・対象レイヤー)とマクロ(名前・説明)の入力",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "コンボを追加すると、キー図に番号の丸が付き、一覧にも表示されることを確認している",
         "マクロを追加・削除できることを確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/components/editor/ComboMacroEditor.tsx を作成。コンボは「キーを選ぶ」状態でキー図をクリックして対象を出し入れする",
+        "コンボ(J+K→左クリック)を追加するとキー図に番号の丸が付き一覧に出る。マクロの追加・削除(p5-5-combo-macro.png)",
+        "ヘッドレスChromeでの操作確認 evidence/p5-editor/cdp-editor.mjs は21/21成功(evidence/p5-editor/README.md)",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P5-4"
       ]
@@ -816,13 +836,18 @@
       "phase": 5,
       "role": "executor",
       "task": "保存から共有URLの発行まで: 保存後に配列ページのURLと編集用URL(秘密キー入り)を表示し、編集用URLをブラウザ(localStorage)にも保存する。紛失すると編集できない旨を明記する。入力途中の下書きをブラウザに自動保存する",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "保存すると共有URLと編集用URLが表示されるスクリーンショットがある",
         "編集用URLがlocalStorageに保存されることを確認している",
         "ページを再読み込みしても入力途中の下書きが戻ることを確認している"
       ],
-      "evidence": [],
+      "evidence": [
+        "保存後に共有URLと編集用URL(/k/[slug]/edit#key=秘密キー)を表示し、localStorage(keycap-share:edit-keys)に保存。紛失すると編集できない旨を表示(p5-6-saved.png。秘密キーは伏せて撮影)",
+        "下書きを localStorage に自動保存し、再読み込みで復元。保存後は下書きを消す。作業中に、開いた直後の保存で下書きが最初の状態に上書きされる不具合を見つけて修正",
+        "ヘッドレスChromeでの操作確認 evidence/p5-editor/cdp-editor.mjs は21/21成功(evidence/p5-editor/README.md)。テスト投稿 /k/BAF-BjDj1pk(一覧に出さない)を作成",
+        "評価役確認: passes 3条件を確認した"
+      ],
       "dependencies": [
         "P5-5"
       ]
