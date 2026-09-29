@@ -26,6 +26,7 @@ import { submitLayout } from "@/lib/layout-submit";
 import { checkEditSecret, deleteLayoutWithSecret, updateLayoutWithSecret } from "@/lib/layout-edit";
 import { ogImageVersion } from "@/lib/og-image";
 import { checkSubmissionAllowed, ipHashFor, recordSubmission } from "@/lib/rate-limit";
+import { submitReport } from "@/lib/reports";
 
 const FACTORY_DEFAULT_SLUG = "orca-echo-factory-default";
 
@@ -319,5 +320,36 @@ describe("投稿数の制限(Supabase、P6-4)", () => {
     await recordSubmission("layout_create", otherIpHash, content);
     const third = ipHashFor(`third-${Date.now()}`);
     expect(await checkSubmissionAllowed("layout_create", third, content)).toContain("同じ内容の配列が少し前に投稿されています");
+  });
+});
+
+describe("問題の報告(Supabase、P6-5)", () => {
+  // テスト用の架空の接続元。テストが作った報告と記録は最後に削除する(人間の許可、2026-09-29)
+  const fakeIpHash = ipHashFor(`report-test-${Date.now()}-${Math.random()}`);
+  afterAll(async () => {
+    const db = createServerSupabase();
+    await db.from("reports").delete().eq("ip_hash", fakeIpHash);
+    await db.from("submission_events").delete().eq("ip_hash", fakeIpHash);
+  });
+
+  it("報告は記録され、同じ配列への2回目は受け付けない。ブラウザ側の権限では報告を読めない", async () => {
+    const first = await submitReport({ slug: "orca-echo-combo-sample", reason: "other", comment: "(結合テストの報告)" }, fakeIpHash);
+    expect(first).toEqual({ ok: true });
+    const second = await submitReport({ slug: "orca-echo-combo-sample", reason: "spam" }, fakeIpHash);
+    expect(second.ok).toBe(false);
+    if (!second.ok) expect(second.error).toContain("すでに報告を受け付けています");
+
+    const { data } = await createServerSupabase().from("reports").select("reason, comment, ip_hash").eq("ip_hash", fakeIpHash);
+    expect(data).toEqual([{ reason: "other", comment: "(結合テストの報告)", ip_hash: fakeIpHash }]);
+    console.log(`報告の記録: ${JSON.stringify(data?.map((r) => ({ reason: r.reason, comment: r.comment })))}`);
+
+    const { anonClient } = await import("@/lib/supabase").then((m) => ({ anonClient: m.supabase }));
+    const anon = await anonClient.from("reports").select("*").limit(1);
+    expect(anon.error?.code).toBe("42501");
+  });
+
+  it("存在しない配列・不正な理由の報告は受け付けない", async () => {
+    expect((await submitReport({ slug: "no-such-slug", reason: "spam" }, fakeIpHash)).ok).toBe(false);
+    expect((await submitReport({ slug: "orca-echo-combo-sample", reason: "bogus" }, fakeIpHash)).ok).toBe(false);
   });
 });

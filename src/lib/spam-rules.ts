@@ -39,6 +39,21 @@ export function decideSubmission(stats: { lastHour: number; lastDay: number; dup
   return null;
 }
 
+/** 問題の報告の上限(同じ接続元から): 1時間に5件・1日に20件。同じ配列への報告は1日1回まで */
+export const REPORT_LIMIT_PER_HOUR = 5;
+export const REPORT_LIMIT_PER_DAY = 20;
+
+/** 問題の報告を受け付けるか。受け付けないときはエラー文 */
+export function decideReport(stats: { lastHour: number; lastDay: number; alreadyReported: boolean }): string | null {
+  if (stats.alreadyReported) {
+    return "この配列はすでに報告を受け付けています。ご協力ありがとうございます。";
+  }
+  if (stats.lastDay >= REPORT_LIMIT_PER_DAY || stats.lastHour >= REPORT_LIMIT_PER_HOUR) {
+    return "短い時間に報告が続いたため、いったん受け付けを止めています。時間をおいてから、もう一度お試しください。";
+  }
+  return null;
+}
+
 /** 同じ内容かを見分けるためのハッシュ(タイトル・説明・レイヤー・コンボ・マクロ。投稿者名やタグの違いは同じ内容とみなす) */
 export function contentHash(input: { title: string; description?: string; layers: unknown; combos: unknown; macros: unknown }): string {
   const normalized = JSON.stringify([input.title.trim(), (input.description ?? "").trim(), input.layers, input.combos, input.macros]);

@@ -1,0 +1,47 @@
+# docs/operations.md — 運用の手順
+
+サイトを公開して運用するときの手順と決まりごと。`docs/safety.md` の「人間の承認が必要な操作」と矛盾しないこと。
+
+## 1. 本番(Vercel)に必要な環境変数
+
+値そのものはここに書かない(`docs/safety.md`)。Vercel の **Settings → Environment Variables** で、**Production と Preview の両方**に設定する。
+
+| 名前 | 用途 | 注意 |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase のURL | ブラウザにも出てよい |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の Publishable key(公開用) | ブラウザにも出てよい |
+| `SUPABASE_SECRET_KEY` | Supabase の Secret key(配列の保存・編集・削除、投稿数の制限、報告) | **秘密。`NEXT_PUBLIC_` を付けない**。Sensitive にする |
+| `CRON_SECRET` | 定期実行(Supabase の自動停止対策)の合言葉(P6-6) | 秘密。Vercel の Cron が自動で送る |
+
+- 環境変数を追加・変更したら、**次のデプロイから**使われる(再デプロイが必要)。
+- 手元の `.env.local` に入れただけでは本番には入らない。サーバー専用の秘密の値を新しく使い始めたときは、その時点で Vercel への設定を人間に依頼する(2026-09-29 に、これを忘れて本番で保存に失敗した)。
+
+## 2. 問題の報告の確認と、配列の削除
+
+- 配列ページの「問題を報告する」から送られた報告は、Supabase の `reports` テーブルに記録される(ブラウザ側からは読めない)。
+- 確認: Supabase の **Table Editor → reports** を開く。`layout_id` から配列を探すには、SQL Editor で次を実行する。
+  ```sql
+  select r.created_at, r.reason, r.comment, l.slug, l.title
+  from reports r join layouts l on l.id = r.layout_id
+  order by r.created_at desc;
+  ```
+- **報告を受けた配列の削除は、毎回人間の承認を得てから行う**(`docs/safety.md`: データの削除)。AI が削除するときも、対象の slug・タイトル・理由を人間に示し、承認をもらってから行う。削除すると、その配列のレイヤー・割り当て・コンボ・マクロ・報告もカスケードで消える。
+- 報告を送った人の接続元は、ハッシュ(元に戻せない値)でしか記録していない。
+
+## 3. 投稿数の制限と簡易的な不正検知(P6-4)
+
+| 内容 | 値 |
+|---|---|
+| 新規投稿(同じ接続元から) | 1時間に5件・1日に20件まで |
+| 同じ内容の連投 | 10分以内は拒否(別の接続元からでも) |
+| 説明文のURL | 2つまで(3つ以上は拒否。新規・編集とも) |
+| 問題の報告(同じ接続元から) | 1時間に5件・1日に20件まで。同じ配列への報告は1日1回 |
+
+- 値は `src/lib/spam-rules.ts` にまとめている。変えるときは人間に相談する。
+- 接続元(IPアドレス)は、サーバーだけが持つ値(secret key から作る salt)を混ぜた SHA-256 にして `submission_events` に保存する。IPアドレスそのものは保存しない。
+
+## 4. テスト用のデータ
+
+- 結合テスト(`npm run test:integration`)は本番と同じ Supabase を使う。テストが自分で作ったテスト投稿・記録・報告は、テストの最後に自動で削除する(人間の許可、2026-09-29)。
+- 確認用に残している配列: `orca-echo-factory-default`(一覧に出る)、`orca-echo-combo-sample`(一覧に出さない)。これらは削除しない。
+- 開発サーバーの画面で作ったテスト投稿は「一覧に出さない」印を付けて作る。テストの外で作ったテスト投稿の削除は、人間の承認を得てから行う。

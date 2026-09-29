@@ -1077,12 +1077,17 @@
       "phase": 6,
       "role": "executor",
       "task": "問題の報告: 配列ページに「問題を報告する」を置き、理由(選択+任意のコメント)を記録する。削除は毎回人間の承認を得てから行う",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "報告が記録されることを確認している(ブラウザ側の権限では報告の一覧を読めない)",
         "同じ接続元からの報告の連投が制限されている"
       ],
-      "evidence": [],
+      "evidence": [
+        "「問題を報告する」(ReportButton)、reports への記録(src/lib/reports.ts)、報告の回数の制限(decideReport・checkReportAllowed)を作成。運用手順 docs/operations.md を新規作成(報告の確認方法、削除は毎回人間の承認、必要な環境変数の一覧)",
+        "結合テスト: 報告が記録される / 同じ配列への2回目は「すでに報告を受け付けています」で拒否 / ブラウザ側の権限では reports を読めない(42501) / 存在しない配列・不正な理由は拒否。npm test 113件、npm run test:integration 19件成功(evidence/p6-5/README.md)",
+        "スクリーンショット evidence/p6-5/report-link.png(報告の欄)",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P6-4"
       ]

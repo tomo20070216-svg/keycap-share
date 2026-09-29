@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ReportButton } from "@/components/ReportButton";
 import { LayerNav, LayerSection, LayoutCombosAndMacros, LayoutHeader, LayoutSharePanel } from "@/components/LayoutView";
 import { buildLayoutMetadata } from "@/lib/layout-metadata";
 import { getLayoutPageData } from "@/lib/layout-page-data";
@@ -30,6 +31,7 @@ export default async function LayerPage(props: PageProps<"/k/[slug]/[layer]">) {
       <LayerNav layout={layout} current={layer.layerNumber} />
       <LayerSection layout={layout} keyboard={keyboard} layer={layer} headingLink={false} />
       <LayoutCombosAndMacros layout={layout} keyboard={keyboard} />
+      <ReportButton slug={layout.slug} />
     </main>
   );
 }

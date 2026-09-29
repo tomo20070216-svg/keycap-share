@@ -7,6 +7,7 @@ import {
   checkDescriptionUrls,
   contentHash,
   countUrls,
+  decideReport,
   decideSubmission,
   hashIp,
 } from "@/lib/spam-rules";
@@ -61,5 +62,14 @@ describe("同じ内容のハッシュ・IPアドレスのハッシュ", () => {
     expect(h).not.toContain("203.0.113.5");
     expect(h).not.toBe(hashIp("203.0.113.5", "salt-b"));
     expect(h).toBe(hashIp("203.0.113.5", "salt-a"));
+  });
+});
+
+describe("問題の報告の判断(P6-5)", () => {
+  it("同じ配列への2回目の報告・短時間の連続した報告は受け付けない", () => {
+    expect(decideReport({ lastHour: 0, lastDay: 0, alreadyReported: false })).toBeNull();
+    expect(decideReport({ lastHour: 0, lastDay: 0, alreadyReported: true })).toContain("すでに報告を受け付けています");
+    expect(decideReport({ lastHour: 5, lastDay: 5, alreadyReported: false })).toContain("時間をおいてから");
+    expect(decideReport({ lastHour: 0, lastDay: 20, alreadyReported: false })).toContain("時間をおいてから");
   });
 });
