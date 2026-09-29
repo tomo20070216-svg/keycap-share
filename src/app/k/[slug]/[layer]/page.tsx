@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LayerNav, LayerSection, LayoutCombosAndMacros, LayoutHeader } from "@/components/LayoutView";
+import { buildLayoutMetadata } from "@/lib/layout-metadata";
 import { getLayoutPageData } from "@/lib/layout-page-data";
 import { findLayerByParam } from "@/lib/layout-page-utils";
 
@@ -11,10 +12,7 @@ export async function generateMetadata(props: PageProps<"/k/[slug]/[layer]">): P
   const data = await getLayoutPageData(slug);
   const layer = data ? findLayerByParam(data.layout, layerParam) : null;
   if (!data || !layer) return {};
-  return {
-    title: `${data.layout.title} — ${layer.layerName}(${data.keyboard.name})`,
-    description: data.layout.description,
-  };
+  return buildLayoutMetadata(data.layout, data.keyboard, layer);
 }
 
 export default async function LayerPage(props: PageProps<"/k/[slug]/[layer]">) {

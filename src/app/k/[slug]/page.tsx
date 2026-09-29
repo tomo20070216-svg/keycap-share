@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LayerNav, LayerSection, LayoutCombosAndMacros, LayoutHeader } from "@/components/LayoutView";
+import { buildLayoutMetadata } from "@/lib/layout-metadata";
 import { getLayoutPageData } from "@/lib/layout-page-data";
 
-/** 配列ページ: 配列の全レイヤーを縦に並べて表示する(P3-2)。OGP用のメタタグはフェーズ4で追加する */
+/** 配列ページ: 配列の全レイヤーを縦に並べて表示する(P3-2)。メタタグ(Xのカード・OGP)は P4-3 */
 
 export async function generateMetadata(props: PageProps<"/k/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const data = await getLayoutPageData(slug);
   if (!data) return {};
-  return { title: `${data.layout.title}(${data.keyboard.name})`, description: data.layout.description };
+  return buildLayoutMetadata(data.layout, data.keyboard);
 }
 
 export default async function LayoutPage(props: PageProps<"/k/[slug]">) {

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/site";
+import { SITE_NAME, getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: getSiteUrl(),
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
   description: "分割キーボードのキー配列を投稿・閲覧して、X(旧Twitter)で共有できるサイトです。",
 };

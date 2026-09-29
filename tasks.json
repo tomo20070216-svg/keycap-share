@@ -622,12 +622,18 @@
       "phase": 4,
       "role": "executor",
       "task": "メタタグ: 配列ページ・レイヤーページで twitter:card(summary_large_image)・og:title・og:description・og:image・og:url などをサーバー側で出力する。画像のURLに更新日時を含め、編集後にXの古い画像が残りにくくする",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "JavaScriptなしのHTMLソースに twitter:card=summary_large_image、og:title、og:image(絶対URL)などが含まれることを確認している",
         "og:image のURLを開くと画像が返る"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/lib/layout-metadata.ts(buildLayoutMetadata)を作成し、配列ページ・レイヤーページの generateMetadata で使用。ルートレイアウトに metadataBase(src/lib/site.ts の getSiteUrl。テスト3件)",
+        "JavaScriptなしのHTMLに twitter:card=summary_large_image、twitter:title・image、og:title・description・url・image(絶対URL、1200×630、alt)・type・site_name・locale、canonical が出力されることを確認(evidence/p4-3/README.md)",
+        "og:image のURL(?v=更新日時)を開くと PNG が返り、Cache-Control は immutable の長期キャッシュ。違う版は60秒",
+        "npm test 8ファイル69件成功",
+        "評価役確認: passes 2条件を確認した(本番での確認はP4-7)"
+      ],
       "dependencies": [
         "P4-2"
       ]
