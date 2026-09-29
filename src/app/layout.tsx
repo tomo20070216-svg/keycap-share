@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import { LinkPendingHint } from "@/components/LinkPendingHint";
+import { NavigationProgress } from "@/components/NavigationProgress";
 import { PendingLinkLabel } from "@/components/PendingLinkLabel";
 import { SITE_NAME, getSiteUrl } from "@/lib/site";
 import "./globals.css";
@@ -14,6 +17,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ja" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
+        {/* 画面の切り替え中に上部に出るバー(URLの ? 以降を読むため Suspense で囲む) */}
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <header className="border-b border-zinc-200">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
             <Link href="/" className="text-lg font-bold tracking-tight">
@@ -22,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <nav className="flex items-center gap-4 text-sm">
               <Link href="/" className="underline-offset-4 hover:underline">
                 配列の一覧
+                <LinkPendingHint label="" />
               </Link>
               <Link href="/new" className="rounded-md bg-zinc-900 px-3 py-1.5 font-bold text-white hover:bg-zinc-700">
                 <PendingLinkLabel label="配列を投稿する" pendingLabel="開いています…" />

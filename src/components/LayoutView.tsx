@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ComboMacroList } from "@/components/ComboMacroList";
 import { OwnerEditLink } from "@/components/OwnerEditLink";
 import { KeymapDiagram, getKeymapDiagramSize } from "@/components/KeymapDiagram";
+import { LinkPendingHint } from "@/components/LinkPendingHint";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { SharePanel } from "@/components/SharePanel";
 import { StarButton } from "@/components/StarButton";
@@ -72,6 +73,7 @@ export function LayoutHeader({
                 className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-200"
               >
                 {`#${tag}`}
+                <LinkPendingHint label="" />
               </Link>
             </li>
           ))}
@@ -85,6 +87,7 @@ export function LayoutHeader({
           className="inline-block rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100"
         >
           この配列をコピーして編集
+          <LinkPendingHint label="開いています…" />
         </Link>
       </div>
     </header>
@@ -103,12 +106,14 @@ export function LayerNav({ layout, current }: { layout: Layout; current?: number
         <li>
           <Link href={layoutPath(layout.slug)} className={itemClass(current === undefined)}>
             すべてのレイヤー
+            <LinkPendingHint label="" />
           </Link>
         </li>
         {layout.layers.map((layer) => (
           <li key={layer.layerNumber}>
             <Link href={layoutPath(layout.slug, layer.layerNumber)} className={itemClass(current === layer.layerNumber)}>
               {`${layer.layerNumber}: ${layer.layerName}`}
+              <LinkPendingHint label="" />
             </Link>
           </li>
         ))}

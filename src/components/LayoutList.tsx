@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { KeymapDiagram, getKeymapDiagramSize } from "@/components/KeymapDiagram";
 import { layoutPath, tagPath } from "@/components/LayoutView";
+import { LinkPendingHint } from "@/components/LinkPendingHint";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
 import { formatDateJa, listHref, totalPages, type LayoutSort } from "@/lib/layout-page-utils";
@@ -39,6 +40,7 @@ function LayoutCard({ layout, keyboard }: { layout: Layout; keyboard: KeyboardPh
         <h2 className="text-lg font-bold leading-snug">
           <Link href={layoutPath(layout.slug)} className="hover:underline underline-offset-4">
             {layout.title}
+            <LinkPendingHint />
           </Link>
         </h2>
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-600">
@@ -54,6 +56,7 @@ function LayoutCard({ layout, keyboard }: { layout: Layout; keyboard: KeyboardPh
             <li key={tag}>
               <Link href={tagPath(tag)} className="rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-200">
                 {`#${tag}`}
+                <LinkPendingHint label="" />
               </Link>
             </li>
           ))}
@@ -92,6 +95,7 @@ export function LayoutList({
       }`}
     >
       {label}
+      <LinkPendingHint label="" />
     </Link>
   );
   return (
@@ -111,9 +115,23 @@ export function LayoutList({
       )}
       {pages > 1 && (
         <nav aria-label="ページ送り" className="flex items-center justify-center gap-4 text-sm">
-          {page > 1 ? <Link href={pageHref(page - 1)} className="underline underline-offset-4">前のページ</Link> : <span />}
+          {page > 1 ? (
+            <Link href={pageHref(page - 1)} className="underline underline-offset-4">
+              前のページ
+              <LinkPendingHint />
+            </Link>
+          ) : (
+            <span />
+          )}
           <span className="text-zinc-600">{`${page} / ${pages} ページ(全${total}件)`}</span>
-          {page < pages ? <Link href={pageHref(page + 1)} className="underline underline-offset-4">次のページ</Link> : <span />}
+          {page < pages ? (
+            <Link href={pageHref(page + 1)} className="underline underline-offset-4">
+              次のページ
+              <LinkPendingHint />
+            </Link>
+          ) : (
+            <span />
+          )}
         </nav>
       )}
     </div>
