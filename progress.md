@@ -595,3 +595,10 @@
 
 - 人間の承認(push OK)を得て本番に反映(31b77cc..1492315)。本番でタイトル・og:site_name・OGP画像が「KeyMap Hub」、画像URLの版が `-2` 付きになったこと、/new でスマホの幅のタップでの入れ替え(左右をまたぐ・種類違いの拒否・やめる・元に戻す)を確認。本番DBの `is_provisional` は人間が false に変更済み(読み取りで確認)。
 - 評価役として P7-1〜P7-3 を `done` にした。
+
+---
+
+## 2026-09-29 — サイトのアイコン(実行役)
+
+- 人間が作ったアイコンを、ブラウザのタブ(`src/app/icon.png`・`favicon.ico`)と iPhone のホーム画面(`src/app/apple-icon.png`)に使った。元の画像の白い余白は透明にした。元の画像と作り方は `docs/brand/`。
+- 確認: 開発サーバーのHTMLに `<link rel="icon" …icon.png sizes="512x512">`・`<link rel="apple-touch-icon" …180x180>` が出て、3つとも 200 で返る。`npm run build` 成功。見た目は `evidence/p7/p7-4-icon-preview.png`(赤い背景の上で、角が透明になっていることを確認)。
