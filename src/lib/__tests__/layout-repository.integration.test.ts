@@ -22,6 +22,7 @@ import {
 } from "@/lib/layout-repository";
 import type { Layer, LayoutInput } from "@/lib/schemas";
 import { createServerSupabase } from "@/lib/supabase-server";
+import { submitLayout } from "@/lib/layout-submit";
 
 const FACTORY_DEFAULT_SLUG = "orca-echo-factory-default";
 
@@ -184,5 +185,42 @@ describe("配列の一覧(Supabase、0003適用後)", () => {
     expect(sample.layouts.map((l) => l.slug)).not.toContain("orca-echo-combo-sample");
     // 存在しないタグは0件
     expect(await listLayouts({ tag: "存在しないタグ" })).toEqual({ layouts: [], total: 0 });
+  });
+});
+
+describe("エディタからの投稿の保存(Supabase、P5-1)", () => {
+  const SUBMIT_TEST_SLUG = "p5-1-submit-test";
+
+  it("正しい入力は一覧に出さないテスト投稿として保存され、秘密キーはハッシュだけがDBに残る", async () => {
+    const existing = await getLayoutBySlug(SUBMIT_TEST_SLUG);
+    if (existing) {
+      console.log(`保存済みのテスト投稿を使用: slug=${existing.slug}`);
+    } else {
+      const result = await submitLayout(
+        { keyboardId: "orca-echo", title: "P5-1 保存処理のテスト投稿", tags: ["テスト投稿"], layers: orcaEchoFactoryDefaultLayers },
+        { isListed: false, slug: SUBMIT_TEST_SLUG }
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.slug).toBe(SUBMIT_TEST_SLUG);
+      expect(result.editSecret).toMatch(/^[A-Za-z0-9_-]{43}$/);
+      const { data } = await createServerSupabase()
+        .from("layouts")
+        .select("is_listed, layout_secrets ( edit_secret_hash )")
+        .eq("slug", SUBMIT_TEST_SLUG)
+        .single<{ is_listed: boolean; layout_secrets: { edit_secret_hash: string } | null }>();
+      expect(data!.is_listed).toBe(false);
+      expect(data!.layout_secrets!.edit_secret_hash).toBe(hashEditSecret(result.editSecret));
+      console.log(`新規保存: slug=${result.slug}(一覧に出さない)`);
+    }
+    const layout = await getLayoutBySlug(SUBMIT_TEST_SLUG);
+    expect(layout?.title).toBe("P5-1 保存処理のテスト投稿");
+    expect((await listLayouts({ perPage: 50 })).layouts.map((l) => l.slug)).not.toContain(SUBMIT_TEST_SLUG);
+  });
+
+  it("不正な入力はDBに何も書かずにエラーを返す", async () => {
+    const result = await submitLayout({ keyboardId: "orca-echo", title: "", layers: [] }, { isListed: false, slug: "p5-1-invalid-test" });
+    expect(result.ok).toBe(false);
+    expect(await getLayoutBySlug("p5-1-invalid-test")).toBeNull();
   });
 });

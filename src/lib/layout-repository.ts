@@ -60,7 +60,11 @@ export type CreateLayoutResult = {
  */
 export async function createLayout(
   input: LayoutInput,
-  options: { slug?: string } = {}
+  options: {
+    slug?: string;
+    /** 一覧に出すか(false = テスト投稿など。URLを直接開けば見られる) */
+    isListed?: boolean;
+  } = {}
 ): Promise<CreateLayoutResult> {
   const parsed = LayoutInputSchema.parse(input);
 
@@ -77,6 +81,7 @@ export async function createLayout(
     .from("layouts")
     .insert({
       slug,
+      is_listed: options.isListed ?? true,
       keyboard_id: parsed.keyboardId,
       title: parsed.title,
       description: parsed.description ?? null,

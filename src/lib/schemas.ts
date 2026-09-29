@@ -83,7 +83,7 @@ export type Assignment = z.infer<typeof AssignmentSchema>;
 export const LayerSchema = z.object({
   layerNumber: z.number().int().min(0),
   layerName: z.string().min(1).max(40),
-  assignments: z.array(AssignmentSchema),
+  assignments: z.array(AssignmentSchema).max(300), // 1レイヤーの割り当ての上限(Orca echo は全要素・全操作でも約110)
 });
 export type Layer = z.infer<typeof LayerSchema>;
 
@@ -126,7 +126,7 @@ export const LayoutInputSchema = z.object({
   authorName: z.string().max(40).optional(), // 自由入力ニックネーム(Xアカウント等と連携しない)
   forkedFromLayoutId: z.string().uuid().optional(), // 「コピーして編集」機能で使う複製元ID
   tags: z.array(z.string().min(1).max(20)).max(10).default([]),
-  layers: z.array(LayerSchema).min(1),
+  layers: z.array(LayerSchema).min(1).max(10), // レイヤー数の上限
   combos: z.array(ComboSchema).max(50).default([]),
   macros: z.array(MacroSchema).max(50).default([]),
 });
