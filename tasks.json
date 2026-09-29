@@ -580,12 +580,17 @@
       "phase": 4,
       "role": "executor",
       "task": "技術検証: Vercel上(プレビューデプロイ)で、ImageResponse と日本語フォント(5.3MB)が動くか、500KBの制限・生成時間を確かめ、フォントの持ち方(丸ごと / 使う文字だけに絞る)を決める。プレビューデプロイは本番ではないが、結果は人間に報告する",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "プレビューデプロイで生成したOGP画像(日本語入り)が evidence/ に保存されている",
         "フォントの持ち方の結論と理由が progress.md に記録されている"
       ],
-      "evidence": [],
+      "evidence": [
+        "確認用ブランチ preview/p4-1 を push してVercelのプレビューデプロイを作成(本番ではない)。デプロイ保護があるため、人間がログイン済みのブラウザで /dev/og/orca-echo-factory-default を開いて画像を保存",
+        "evidence/p4-1/orca-echo-factory-default.png: PNG 1200×630、日本語の文字化けなし。表示まで約2.5秒(evidence/p4-1/README.md)",
+        "結論(progress.mdに記録): フォントは丸ごと(5.3MB)使う。nodejs実行環境では500KB制限にかからない。生成時間は画像URLに更新日時を含めてCDNに長期キャッシュさせて対応する",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P4-PLACEHOLDER"
       ]
