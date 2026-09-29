@@ -1317,10 +1317,15 @@
       "phase": 7,
       "role": "executor",
       "task": "サイトの処理(Vercel Functions)を東京(hnd1)で動かす。DB(Supabase、東京)との往復を日本の中で済ませ、画面の表示を速くする",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "変更前後の本番の応答時間(同じ画面・同じ回数)の比較がある",
         "本番の応答で処理の場所が hnd1 になっていることの確認結果がある"
+      ],
+      "evidence": [
+        "変更前(iad1)→変更後(hnd1)の本番の最初の応答の中央値: / 1099→165ms、/?sort=popular 677→112ms、/k/Iywp3BUpM-g 700→135ms、/k/…/1 1116→97ms、/tags/windows 1885→140ms、/new 184→44ms(evidence/p7-speed/before.md、after.md)",
+        "本番の x-vercel-id が kix1::hnd1(変更前は kix1::iad1)",
+        "評価役確認: passes 2条件を確認した"
       ],
       "dependencies": [
         "P7-9"
@@ -1331,11 +1336,17 @@
       "phase": 7,
       "role": "executor",
       "task": "画面の切り替え中に動きが見えるようにする: 画面上部の進み具合のバー(リンクを押した瞬間から次の画面が出るまで)と、押したリンクの「読み込み中」表示。新しいパッケージは使わない。loading.tsx は使わない(404 が 200 になるため)",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "リンクを押した直後にバーが出て、画面が変わると消えることの画面での確認結果がある",
         "同じ画面へのリンク・新しいタブで開く操作・外部リンクではバーが出ない(単体テスト)",
         "存在しないページは引き続き 404 を返す"
+      ],
+      "evidence": [
+        "開発サーバーと本番で、通信を2.5秒遅らせて、押して100ms後にバーが出て伸び、画面が変わると消えることを確認。カードのタイトルに「読み込み中…」(evidence/p7-speed/)",
+        "単体テスト: 同じ画面・# だけ・新しいタブ・中クリック・外部サイト・ダウンロードでは出さない(navigation-progress.test.ts)",
+        "本番で /k/no-such-slug 404、/?page=99 404(loading.tsx 不使用のため変わらない)。OGP画像 200、keepalive は合言葉なしで 401",
+        "評価役確認: passes 3条件を確認した"
       ],
       "dependencies": [
         "P7-10"
