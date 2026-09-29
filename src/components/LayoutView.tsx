@@ -24,8 +24,16 @@ export function tagPath(tag: string): string {
   return `/tags/${encodeURIComponent(tag)}`;
 }
 
-/** タイトル・機種名・投稿者名・日付・説明・タグ */
-export function LayoutHeader({ layout, keyboard }: { layout: Layout; keyboard: KeyboardPhysicalLayout }) {
+/** タイトル・機種名・投稿者名・日付・元にした配列・説明・タグ・コピーして編集 */
+export function LayoutHeader({
+  layout,
+  keyboard,
+  forkedFrom,
+}: {
+  layout: Layout;
+  keyboard: KeyboardPhysicalLayout;
+  forkedFrom?: { slug: string; title: string } | null;
+}) {
   return (
     <header className="flex flex-col gap-3">
       <h1 className="text-2xl font-bold leading-snug">
@@ -39,6 +47,14 @@ export function LayoutHeader({ layout, keyboard }: { layout: Layout; keyboard: K
         <span>{`投稿日: ${formatDateJa(layout.createdAt)}`}</span>
         {layout.updatedAt !== layout.createdAt && <span>{`更新日: ${formatDateJa(layout.updatedAt)}`}</span>}
       </div>
+      {forkedFrom && (
+        <p className="text-sm text-zinc-600">
+          {"元にした配列: "}
+          <Link href={layoutPath(forkedFrom.slug)} className="underline underline-offset-4" data-testid="forked-from">
+            {forkedFrom.title}
+          </Link>
+        </p>
+      )}
       {layout.description && (
         <section className="flex flex-col gap-1">
           <h2 className="text-sm font-bold text-zinc-700">なぜこの配置にしたか</h2>
@@ -59,6 +75,14 @@ export function LayoutHeader({ layout, keyboard }: { layout: Layout; keyboard: K
           ))}
         </ul>
       )}
+      <div>
+        <Link
+          href={`/new?from=${encodeURIComponent(layout.slug)}`}
+          className="inline-block rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100"
+        >
+          この配列をコピーして編集
+        </Link>
+      </div>
     </header>
   );
 }

@@ -25,7 +25,7 @@ export default async function LayerPage(props: PageProps<"/k/[slug]/[layer]">) {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8">
-      <LayoutHeader layout={layout} keyboard={keyboard} />
+      <LayoutHeader layout={layout} keyboard={keyboard} forkedFrom={data.forkedFrom} />
       <LayoutSharePanel layout={layout} keyboard={keyboard} layerNumber={layer.layerNumber} />
       <LayerNav layout={layout} current={layer.layerNumber} />
       <LayerSection layout={layout} keyboard={keyboard} layer={layer} headingLink={false} />

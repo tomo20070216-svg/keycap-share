@@ -219,6 +219,13 @@ export async function getLayoutBySlug(slug: string): Promise<Layout | null> {
   return data ? rowToLayout(data) : null;
 }
 
+/** 「元にした配列」の表示用: idから slug とタイトルだけを取得する。見つからなければ null */
+export async function getLayoutSummaryById(id: string): Promise<{ slug: string; title: string } | null> {
+  const { data, error } = await supabase.from("layouts").select("slug, title").eq("id", id).maybeSingle();
+  if (error) throw new Error(`配列の取得に失敗しました: ${error.message}`);
+  return data;
+}
+
 export type LayoutListResult = {
   layouts: Layout[];
   /** 条件に合う配列の総数(ページ分けに使う) */

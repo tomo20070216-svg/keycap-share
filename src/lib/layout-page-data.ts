@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { getKeyboard, getLayoutBySlug } from "@/lib/layout-repository";
+import { getKeyboard, getLayoutBySlug, getLayoutSummaryById } from "@/lib/layout-repository";
 import type { KeyboardPhysicalLayout, Layout } from "@/lib/schemas";
 
 /**
@@ -7,12 +7,16 @@ import type { KeyboardPhysicalLayout, Layout } from "@/lib/schemas";
  * React の cache で、同じリクエスト内の重複した取得(ページ本体とメタデータなど)を1回にまとめる。
  */
 export const getLayoutPageData = cache(
-  async (slug: string): Promise<{ layout: Layout; keyboard: KeyboardPhysicalLayout } | null> => {
+  async (
+    slug: string
+  ): Promise<{ layout: Layout; keyboard: KeyboardPhysicalLayout; forkedFrom: { slug: string; title: string } | null } | null> => {
     const layout = await getLayoutBySlug(slug);
     if (!layout) return null;
     const keyboard = await getKeyboard(layout.keyboardId);
     if (!keyboard) return null;
-    return { layout, keyboard };
+    // 「コピーして編集」で作られた配列なら、元にした配列(削除されていれば null)
+    const forkedFrom = layout.forkedFromLayoutId ? await getLayoutSummaryById(layout.forkedFromLayoutId) : null;
+    return { layout, keyboard, forkedFrom };
   }
 );
 
