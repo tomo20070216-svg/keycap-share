@@ -958,13 +958,19 @@
       "phase": 5,
       "role": "reviewer",
       "task": "評価役が evals/acceptance.md フェーズ5の確認方法で、新規作成フォームから共有URLの発行までを実際に操作して確認する(フェーズ5の完了の目安)。フェーズ3で残った「一覧が新しい順に並ぶ」も確認する。テスト投稿は一覧に出さない印を付けて作り、削除は人間の承認を得てから行う",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "操作の各画面のスクリーンショットと、発行されたURLがそろっている",
         "一覧が新しい順に並ぶことを、複数の配列で確認している",
         "本番への反映(push)と本番DBのデータの削除は、人間の承認を得てから行っている"
       ],
-      "evidence": [],
+      "evidence": [
+        "人間が本番の /new で実際の配列「大西配列の基準」を入力して保存し、共有URL https://keycap-share.vercel.app/k/Iywp3BUpM-g が発行された(サイトで最初の本物の投稿)。1回目は保存に失敗し、人間がVercelの環境変数 SUPABASE_SECRET_KEY を設定して解決",
+        "操作の画面: evidence/p5-8/p5-8-before-save.png(保存直前)、p5-8-saved.png(保存後。編集用URLは塗りつぶし、元画像は削除)",
+        "本番の一覧で「大西配列の基準」(09/29)が「工場出荷時配列」(09/28)より上 = 新しい順(複数の配列で確認。evidence/p5-8/prod-home.png)。配列ページ200、メタタグとOGP画像も確認(prod-layout.png、prod-og.png)",
+        "push は毎回人間の承認を得て行った。本番DBのデータは削除していない(テスト投稿5件の削除は人間に確認中)",
+        "評価役確認: passes 3条件と evals/acceptance.md フェーズ5の確認方法を満たすことを確認した(evidence/p5-8/README.md)"
+      ],
       "dependencies": [
         "P5-12"
       ]
