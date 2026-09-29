@@ -28,3 +28,7 @@ keepalive(違う合言葉): 401
 ```
 - DBの変更(0004)は人間の承認を得て適用済み(`evidence/p6-1/`)。
 - 人間が Vercel に `CRON_SECRET`(Production)と `SUPABASE_SECRET_KEY`(Production・Preview)を設定済み。
+
+## 4. 人間による本番での最終確認(2026-09-29)
+- Vercel の Settings → Cron Jobs に `/api/keepalive`(毎日1回)が登録されていることを確認。
+- 人間が本番で自分の配列(`/k/Iywp3BUpM-g`)を「編集する」から編集し、保存できたことを確認。
