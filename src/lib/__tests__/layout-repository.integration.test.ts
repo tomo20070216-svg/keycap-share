@@ -18,6 +18,7 @@ import {
   getKeyboard,
   getLayoutBySlug,
   listLayouts,
+  listPopularTags,
   saveKeyboard,
 } from "@/lib/layout-repository";
 import type { Layer, LayoutInput } from "@/lib/schemas";
@@ -415,5 +416,20 @@ describe("⭐️(Supabase、0005適用後。P7-5〜P7-7)", () => {
       expect(p.starCount > c.starCount || (p.starCount === c.starCount && p.createdAt >= c.createdAt)).toBe(true);
     }
     console.log(`人気順: ${layouts.map((l) => `${l.slug}(⭐️${l.starCount})`).join(", ")}`);
+  });
+});
+
+describe("使われているタグ(Supabase、P7-8)", () => {
+  it("一覧に出している配列のタグだけを、多い順に数える(一覧に出さないコンボのサンプルのタグは含めない)", async () => {
+    const tags = await listPopularTags();
+    const { layouts } = await listLayouts({ perPage: 50 });
+    const listedTags = new Set(layouts.flatMap((l) => l.tags));
+    expect(tags.every((t) => listedTags.has(t))).toBe(true);
+    // タグが20種類以下のうちは、一覧に出している配列のタグがすべて入る
+    if (listedTags.size <= 20) expect(new Set(tags)).toEqual(listedTags);
+    const hidden = (await getLayoutBySlug("orca-echo-combo-sample"))!;
+    const hiddenOnly = hidden.tags.filter((t) => !listedTags.has(t));
+    expect(tags.some((t) => hiddenOnly.includes(t))).toBe(false);
+    console.log(`使われているタグ: ${JSON.stringify(tags)} / 一覧に出さない配列だけのタグ: ${JSON.stringify(hiddenOnly)}`);
   });
 });

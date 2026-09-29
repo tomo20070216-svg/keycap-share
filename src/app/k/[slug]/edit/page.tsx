@@ -5,6 +5,7 @@ import { EditPageClient } from "@/app/k/[slug]/edit/EditPageClient";
 import { createEditorState } from "@/lib/editor-state";
 import { getLayoutPageData } from "@/lib/layout-page-data";
 import { SUPPORTED_KEYBOARDS } from "@/lib/layout-submission";
+import { listPopularTags } from "@/lib/layout-repository";
 
 /** 配列の編集ページ(P6-3)。編集用URL /k/[slug]/edit#key=<秘密キー> で開く */
 
@@ -19,6 +20,7 @@ export default async function EditLayoutPage(props: PageProps<"/k/[slug]/edit">)
   const keyboard = data ? SUPPORTED_KEYBOARDS[data.layout.keyboardId] : undefined;
   if (!data || !keyboard) notFound();
   const { layout } = data;
+  const popularTags = await listPopularTags();
   const initialState = createEditorState({
     keyboardId: layout.keyboardId,
     title: layout.title,
@@ -42,7 +44,13 @@ export default async function EditLayoutPage(props: PageProps<"/k/[slug]/edit">)
           {"」を編集しています。保存すると、同じURLのまま内容が変わります。"}
         </p>
       </header>
-      <EditPageClient slug={slug} title={layout.title} physicalLayout={keyboard} initialState={initialState} />
+      <EditPageClient
+        slug={slug}
+        title={layout.title}
+        physicalLayout={keyboard}
+        initialState={initialState}
+        popularTags={popularTags}
+      />
     </main>
   );
 }

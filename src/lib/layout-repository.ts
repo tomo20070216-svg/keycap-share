@@ -280,6 +280,27 @@ export async function listLayouts(
   return { layouts: data.map(rowToLayout), total: count ?? 0 };
 }
 
+/**
+ * 使われているタグを、使われている数の多い順に返す(タグの候補用。P7-8)。
+ * 一覧に出している配列(is_listed)に付いたタグだけを数える。同じ数なら名前の順。
+ */
+export async function listPopularTags(limit = 20): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("layout_tags")
+    .select("tags ( name ), layouts!inner ( is_listed )")
+    .eq("layouts.is_listed", true)
+    .returns<{ tags: { name: string } | null }[]>();
+  if (error) throw new Error(`タグの取得に失敗しました: ${error.message}`);
+  const counts = new Map<string, number>();
+  for (const row of data) {
+    if (row.tags) counts.set(row.tags.name, (counts.get(row.tags.name) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ja"))
+    .slice(0, limit)
+    .map(([name]) => name);
+}
+
 function rowToLayout(data: LayoutRow): Layout {
   return LayoutSchema.parse({
     id: data.id,

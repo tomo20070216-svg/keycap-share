@@ -7,6 +7,7 @@ import { isDevPagesEnabled } from "@/lib/dev-pages";
 import { createEditorState } from "@/lib/editor-state";
 import { getLayoutPageData } from "@/lib/layout-page-data";
 import { SUPPORTED_KEYBOARDS } from "@/lib/layout-submission";
+import { listPopularTags } from "@/lib/layout-repository";
 
 /**
  * 配列の新規作成(P5-2〜P5-6)。最初は工場出荷時配列が入った状態から始める(人間の決定)。
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
 export default async function NewLayoutPage(props: PageProps<"/new">) {
   const from = (await props.searchParams).from;
   const devMode = isDevPagesEnabled();
+  const popularTags = await listPopularTags();
 
   if (typeof from === "string") {
     const data = await getLayoutPageData(from);
@@ -51,6 +53,7 @@ export default async function NewLayoutPage(props: PageProps<"/new">) {
           draftKey={`fork:${layout.slug}`}
           forkedFrom={{ slug: layout.slug, title: layout.title }}
           devMode={devMode}
+          popularTags={popularTags}
         />
       </main>
     );
@@ -65,7 +68,13 @@ export default async function NewLayoutPage(props: PageProps<"/new">) {
           工場出荷時の配列が入った状態から始まります。変えたいキーだけ書き換えてください。
         </p>
       </header>
-      <LayoutEditor physicalLayout={orcaEcho} initialState={initialState} draftKey="new" devMode={devMode} />
+      <LayoutEditor
+        physicalLayout={orcaEcho}
+        initialState={initialState}
+        draftKey="new"
+        devMode={devMode}
+        popularTags={popularTags}
+      />
     </main>
   );
 }

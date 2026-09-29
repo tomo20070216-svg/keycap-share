@@ -18,11 +18,13 @@ export function EditPageClient({
   title,
   physicalLayout,
   initialState,
+  popularTags,
 }: {
   slug: string;
   title: string;
   physicalLayout: KeyboardPhysicalLayout;
   initialState: EditorState;
+  popularTags: string[];
 }) {
   const [status, setStatus] = useState<{ kind: "checking" } | { kind: "ok"; secret: string } | { kind: "invalid" }>({
     kind: "checking",
@@ -80,6 +82,7 @@ export function EditPageClient({
       draftKey={`edit:${slug}`}
       devMode={false}
       edit={{ slug, secret: status.secret }}
+      popularTags={popularTags}
     />
   );
 }

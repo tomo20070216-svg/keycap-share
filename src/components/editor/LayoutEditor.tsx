@@ -10,6 +10,7 @@ import { EditableKeymap } from "@/components/editor/EditableKeymap";
 import { ElementPanel } from "@/components/editor/ElementPanel";
 import { KeyPalette } from "@/components/editor/KeyPalette";
 import { LayerTabs } from "@/components/editor/LayerTabs";
+import { TagPicker } from "@/components/editor/TagPicker";
 import { useKeyDrag, type DragSource } from "@/components/editor/useKeyDrag";
 import { canRedo, canUndo, createHistory, historyReducer, type EditorHistory, type HistoryAction } from "@/lib/editor-history";
 import { canSwapElements, decideTapSwap, toLayoutInput, type EditorState } from "@/lib/editor-state";
@@ -53,6 +54,7 @@ export function LayoutEditor({
   forkedFrom,
   devMode,
   edit,
+  popularTags = [],
 }: {
   physicalLayout: KeyboardPhysicalLayout;
   initialState: EditorState;
@@ -64,6 +66,8 @@ export function LayoutEditor({
   devMode: boolean;
   /** 編集モード: 保存すると、この配列を更新する(新しい配列は作らない) */
   edit?: { slug: string; secret: string };
+  /** タグの候補に出す、ほかの人が使っているタグ(多い順。P7-8) */
+  popularTags?: string[];
 }) {
   const [view, dispatch] = useReducer(reducer, { history: createHistory(initialState), draftRestored: false });
   const { history, draftRestored } = view;
@@ -520,6 +524,14 @@ export function LayoutEditor({
             className="rounded-md border border-zinc-300 px-2 py-2"
           />
         </label>
+        <TagPicker
+          tagsText={state.tagsText}
+          onChange={(value) => dispatch({ type: "setField", field: "tagsText", value })}
+          popularTags={popularTags}
+          title={state.title}
+          description={state.description}
+          layers={state.layers}
+        />
       </section>
 
       <section className="flex flex-col gap-3 border-t border-zinc-200 pt-4">
