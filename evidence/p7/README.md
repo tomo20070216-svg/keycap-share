@@ -27,3 +27,13 @@
 ## P7-2 Orca echo の座標を確認済みに
 - `src/keyboards/orca-echo.ts` の `isProvisional: false`、テスト「人間が実機と見比べて確認済み」成功。
 - 本番DBの `keyboards.is_provisional` は人間が SQL Editor で変更する(未実施の時点の記録)。
+
+## 本番での確認(評価役、https://keycap-share.vercel.app/ 、push 31b77cc..1492315 のあと)
+```
+<title>大西配列の基準(Keychron Orca echo) | KeyMap Hub</title>
+<meta property="og:site_name" content="KeyMap Hub"/>
+<meta property="og:image" content="https://keycap-share.vercel.app/og/k/Iywp3BUpM-g?v=1790663815526-2"/>
+HTTP/1.1 200 OK / Cache-Control: public, max-age=86400, immutable(画像の右下は「KeyMap Hub」)
+```
+- タップでの入れ替え(本番の /new、390×844、タッチ): 上の 1〜6 と同じ結果。保存はしていない(本番に投稿は作っていない)。
+- 本番DB(読み取りのみ): `[{"id":"orca-echo","is_provisional":false}]`(人間が SQL Editor で変更)

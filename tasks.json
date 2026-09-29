@@ -1157,11 +1157,17 @@
       "phase": 7,
       "role": "executor",
       "task": "サイト名を「KeyMap Hub」にする(人間の決定、2026-09-29)。ヘッダー・タイトル・OGP画像・og:site_name。既存のOGP画像が新しい名前で作り直されるようにする。URL・リポジトリ名・ブラウザの保存名は変えない",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "画面・タイトル・OGP画像・og:site_name に「KeyMap Hub」が出ることの確認結果がある",
         "既存の配列のOGP画像のURLが変わり、新しい名前の画像になることの確認結果がある",
         "docs の「サイト名は仮」の記述が更新されている"
+      ],
+      "evidence": [
+        "本番(1492315): トップ・配列ページのタイトルと og:site_name が「KeyMap Hub」、OGP画像の右下が「KeyMap Hub」(evidence/p7/README.md、p7-1-og-image.png)",
+        "既存の配列の画像URLの版が 1790663815526 → 1790663815526-2 に変わり、新しいURLは長く保存・古いURLは短い保存になる(本番で 200 / immutable)",
+        "docs/requirements.md・docs/voice.md の「サイト名は仮」を更新",
+        "評価役確認: passes 3条件を確認した"
       ],
       "dependencies": [
         "P6-8"
@@ -1172,10 +1178,15 @@
       "phase": 7,
       "role": "executor",
       "task": "Orca echo の座標を確認済みにする(人間が実機と見比べて「位置はあっています」と確認、2026-09-29)。isProvisional を false にし、コメント・テスト・docs を更新する。本番DBの keyboards の印は人間が SQL Editor で直す",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "orca-echo.ts の isProvisional が false で、コメントに確認日と確認者(人間)が書かれている",
         "本番DBの keyboards.is_provisional が false であることの確認結果がある(変更は人間が実行)"
+      ],
+      "evidence": [
+        "orca-echo.ts の isProvisional: false、コメントに 2026-09-29 の人間の確認を記載、テスト成功",
+        "本番DB: 人間が SQL Editor で変更し、読み取りで [{\"id\":\"orca-echo\",\"is_provisional\":false}] を確認",
+        "評価役確認: passes 2条件を確認した"
       ],
       "dependencies": [
         "P6-8"
@@ -1186,11 +1197,17 @@
       "phase": 7,
       "role": "executor",
       "task": "編集画面で、タップだけで左手と右手をまたいでキーの割り当てを入れ替えられるようにする(「ほかのキーと入れ替える」→相手をタップ)。スマホで左右が上下に分かれていても使える",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "スマホの幅で、左手のキーと右手のキーを入れ替えられることの画面での確認結果(スクリーンショット)がある",
         "種類が違う相手・やめる・元に戻すが正しく動くことの確認結果がある",
         "単体テスト・型チェック・lint・ビルドが成功している"
+      ],
+      "evidence": [
+        "スマホの幅(390×844、タッチ)で左手 Esc と右手 Y を入れ替え(開発サーバー・本番とも。evidence/p7/)",
+        "種類が違う相手(ダイヤル)は拒否して待ちを続ける・「やめる」・「元に戻す」で元どおり、を本番でも確認",
+        "npm test 16ファイル121件、tsc・eslint・npm run build 成功",
+        "評価役確認: passes 3条件を確認した"
       ],
       "dependencies": [
         "P6-8"
