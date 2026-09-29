@@ -105,7 +105,8 @@ await clickText("button", "閉じる");
 
 // P5-4: レイヤー
 console.log("\n[P5-4] レイヤーの追加・名前変更・削除");
-const tabs = () => ev(`[...document.querySelectorAll('[role="tab"]')].map(t => t.textContent).join(" | ")`);
+// レイヤーのタブだけを数える(キーの一覧の「種類のタブ」は含めない)
+const tabs = () => ev(`[...document.querySelectorAll('section[aria-label="レイヤー"] [role="tab"]')].map(t => t.textContent).join(" | ")`);
 await clickText("button", "＋ レイヤーを追加");
 await sleep(300);
 check("レイヤーを追加できる", (await tabs()).includes("3: レイヤー3"), await tabs());
@@ -117,7 +118,7 @@ await ev(`window.confirm = () => true; true`);
 await clickText("button", "このレイヤーを削除");
 await sleep(300);
 check("レイヤーを削除できる", !(await tabs()).includes("記号"), await tabs());
-await ev(`document.querySelector('[role="tab"]').click()`);
+await ev(`document.querySelector('section[aria-label="レイヤー"] [role="tab"]').click()`);
 await sleep(300);
 check("基本レイヤーには削除ボタンがなく、削除できない旨が出る", (await ev(`document.body.innerText.includes("基本レイヤーは削除できません") && ![...document.querySelectorAll("button")].some(b => b.textContent === "このレイヤーを削除")`)) === true);
 

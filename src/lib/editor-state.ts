@@ -1,4 +1,4 @@
-import type { Action, Combo, Layer, LayoutInput, Macro } from "@/lib/schemas";
+import type { Action, Combo, KeyboardPhysicalLayout, Layer, LayoutInput, Macro } from "@/lib/schemas";
 
 /**
  * 投稿エディタの状態と操作(P5-2〜P5-5)。画面の部品から切り離した純粋な関数なので、テストで確認できる。
@@ -30,6 +30,8 @@ export type EditorAction =
   | { type: "selectLayer"; layerNumber: number }
   | { type: "selectElement"; elementId: string | null }
   | { type: "setAssignment"; elementId: string; action: Action; label: string }
+  /** 表示中のレイヤーで、2つの要素の割り当て(すべての操作)を入れ替える。種類の確認は canSwapElements で行う */
+  | { type: "swapElements"; from: string; to: string }
   | { type: "addLayer" }
   | { type: "renameLayer"; layerNumber: number; name: string }
   | { type: "removeLayer"; layerNumber: number }
@@ -106,6 +108,15 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
           assignments: label === "" ? others : [...others, { elementId: action.elementId, action: action.action, label }],
         };
       });
+    }
+
+    case "swapElements": {
+      if (action.from === action.to) return state;
+      const swap = (id: string) => (id === action.from ? action.to : id === action.to ? action.from : id);
+      return updateLayer(state, state.currentLayer, (layer) => ({
+        ...layer,
+        assignments: layer.assignments.map((a) => ({ ...a, elementId: swap(a.elementId) })),
+      }));
     }
 
     case "addLayer": {
@@ -206,6 +217,14 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
     case "removeMacro":
       return { ...state, macros: state.macros.filter((_, i) => i !== action.index) };
   }
+}
+
+/** 入れ替えられるのは、別々の要素で、同じ種類(キー⇔キー、ダイヤル⇔ダイヤルなど)のときだけ */
+export function canSwapElements(physicalLayout: KeyboardPhysicalLayout, from: string, to: string): boolean {
+  if (from === to) return false;
+  const a = physicalLayout.elements.find((e) => e.id === from);
+  const b = physicalLayout.elements.find((e) => e.id === to);
+  return !!a && !!b && a.type === b.type;
 }
 
 /** タグの文字列(空白・読点区切り)を配列にする。先頭の # は外し、重複は除く */

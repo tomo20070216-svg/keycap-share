@@ -31,10 +31,17 @@ export function ResponsiveKeymap({
   }, [width]);
 
   return (
-    // contain: inline-size で、中の図の元の幅が親要素の幅を押し広げないようにする
+    // contain: inline-size で、中の図の元の幅が親要素の幅を押し広げないようにする。
+    // overflow: clip で、はみ出しを隠しつつスクロールもさせない。縮小しても中のボタンの場所(縮小前の大きさ)は
+    // 外枠より大きいままなので、hidden だとボタンにフォーカスが当たったときなどに外枠がスクロールして図がずれる。
+    // clip に対応していない古いブラウザでは hidden になるので、スクロールしてしまったら元に戻す
     <div
       ref={containerRef}
-      style={{ width: "100%", maxWidth: width, height: height * scale, overflow: "hidden", contain: "inline-size" }}
+      onScroll={(e) => {
+        e.currentTarget.scrollTop = 0;
+        e.currentTarget.scrollLeft = 0;
+      }}
+      style={{ width: "100%", maxWidth: width, height: height * scale, overflow: "clip", contain: "inline-size" }}
     >
       <div style={{ width, height, transform: `scale(${scale})`, transformOrigin: "top left" }}>
         {children}

@@ -3,15 +3,21 @@
 import Link from "next/link";
 import { useEffect, useReducer, useRef, useState, useTransition } from "react";
 import { submitLayoutAction } from "@/app/new/actions";
+import { ActionChooser } from "@/components/editor/ActionChooser";
 import { ComboEditor, MacroEditor } from "@/components/editor/ComboMacroEditor";
 import { EditableKeymap } from "@/components/editor/EditableKeymap";
 import { ElementPanel } from "@/components/editor/ElementPanel";
+import { KeyPalette } from "@/components/editor/KeyPalette";
 import { LayerTabs } from "@/components/editor/LayerTabs";
-import { editorReducer, toLayoutInput, type EditorAction, type EditorState } from "@/lib/editor-state";
+import { useKeyDrag, type DragSource } from "@/components/editor/useKeyDrag";
+import { canRedo, canUndo, createHistory, historyReducer, type EditorHistory, type HistoryAction } from "@/lib/editor-history";
+import { canSwapElements, toLayoutInput, type EditorState } from "@/lib/editor-state";
 import type { KeyboardPhysicalLayout } from "@/lib/schemas";
 
 /**
- * 投稿エディタ(P5-2〜P5-6)。
+ * 投稿エディタ(P5-2〜P5-6、P5-10〜P5-12)。
+ * - キーの一覧からキー図へドラッグ&ドロップ(またはタップ→タップ)で置ける。キー図の中のドラッグは入れ替え
+ * - 「元に戻す」「やり直す」
  * - 入力途中の内容は、このブラウザに下書きとして自動保存する(再読み込みしても戻る)
  * - 保存すると、配列ページのURLと編集用URL(秘密キー入り)を表示し、編集用URLはこのブラウザにも保存する
  */
@@ -26,14 +32,16 @@ function draftOf(state: EditorState): EditorState {
   return { ...state, selectedElementId: null, comboPicking: null };
 }
 
-/** エディタの状態 + 「下書きを復元した」印 */
-type ViewState = { editor: EditorState; draftRestored: boolean };
-type ReducerAction = EditorAction | { type: "restore"; state: EditorState; draftRestored: boolean };
+/** エディタの状態(元に戻す履歴つき) + 「下書きを復元した」印 */
+type ViewState = { history: EditorHistory; draftRestored: boolean };
+type ReducerAction = HistoryAction | { type: "restore"; state: EditorState; draftRestored: boolean };
 
 function reducer(view: ViewState, action: ReducerAction): ViewState {
-  if (action.type === "restore") return { editor: action.state, draftRestored: action.draftRestored };
-  return { ...view, editor: editorReducer(view.editor, action) };
+  if (action.type === "restore") return { history: createHistory(action.state), draftRestored: action.draftRestored };
+  return { ...view, history: historyReducer(view.history, action) };
 }
+
+const TYPE_NAMES = { key: "キー", dial: "ダイヤル", scrollpad: "スクロールパッド", trackball: "トラックボール" } as const;
 
 function saveEditKey(saved: Saved, title: string) {
   try {
@@ -61,12 +69,19 @@ export function LayoutEditor({
   /** 開発環境か(テスト投稿のチェックボックスを出す) */
   devMode: boolean;
 }) {
-  const [view, dispatch] = useReducer(reducer, { editor: initialState, draftRestored: false });
-  const { editor: state, draftRestored } = view;
+  const [view, dispatch] = useReducer(reducer, { history: createHistory(initialState), draftRestored: false });
+  const { history, draftRestored } = view;
+  const state = history.present;
   const [errors, setErrors] = useState<string[]>([]);
   const [saved, setSaved] = useState<Saved | null>(null);
   const [testPost, setTestPost] = useState(devMode);
   const [isPending, startTransition] = useTransition();
+  /** タップで選んだ一覧のキー(次にキー図のキーをタップすると置かれる) */
+  const [armedLabel, setArmedLabel] = useState<string | null>(null);
+  /** ダイヤル等に置くとき、どの操作に入れるか選んでもらう */
+  const [pendingDrop, setPendingDrop] = useState<{ elementId: string; label: string } | null>(null);
+  /** ドラッグ&ドロップの結果のお知らせ */
+  const [notice, setNotice] = useState<string | null>(null);
   const loaded = useRef(false);
   /** 画面を開いた直後の1回は下書きを保存しない(読み込む前の最初の状態で、保存済みの下書きを上書きしないため) */
   const skipNextSave = useRef(true);
@@ -105,8 +120,92 @@ export function LayoutEditor({
     }
   }, [state, storageKey, saved]);
 
+  // Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y(Macは⌘)で元に戻す・やり直す。入力欄の中では、入力欄の元に戻すを優先する
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
+      const key = e.key.toLowerCase();
+      if (!(e.ctrlKey || e.metaKey) || (key !== "z" && key !== "y")) return;
+      e.preventDefault();
+      dispatch({ type: key === "y" || e.shiftKey ? "redo" : "undo" });
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const currentLayer = state.layers.find((l) => l.layerNumber === state.currentLayer) ?? state.layers[0];
   const pickedElementIds = state.comboPicking === null ? null : (state.combos[state.comboPicking]?.elementIds ?? []);
+
+  const elementOf = (id: string) => physicalLayout.elements.find((e) => e.id === id);
+  const elementName = (id: string) => {
+    const el = elementOf(id);
+    if (!el) return id;
+    // 印字と種類の名前が同じ(ダイヤルなど)ときは、「ダイヤル(ダイヤル)」とならないよう種類を付けない
+    return el.legend && el.legend !== TYPE_NAMES[el.type] ? `${el.legend}(${TYPE_NAMES[el.type]})` : TYPE_NAMES[el.type];
+  };
+
+  /** 一覧のキーを要素に置く。キーならタップに、それ以外はどの操作に入れるか選んでもらう */
+  function placeLabel(label: string, elementId: string) {
+    const el = elementOf(elementId);
+    if (!el) return;
+    setArmedLabel(null);
+    if (el.type === "key") {
+      dispatch({ type: "setAssignment", elementId, action: "press", label });
+      setNotice(`${elementName(elementId)}に「${label}」を置きました。`);
+    } else {
+      setPendingDrop({ elementId, label });
+    }
+  }
+
+  function handleDrop(source: DragSource, targetId: string | null) {
+    // コンボのキーを選んでいる間は、ドラッグでの入れ替え・配置はしない
+    if (!targetId || state.comboPicking !== null) return;
+    if (source.kind === "palette") {
+      placeLabel(source.label, targetId);
+      return;
+    }
+    if (source.elementId === targetId) return;
+    if (canSwapElements(physicalLayout, source.elementId, targetId)) {
+      dispatch({ type: "swapElements", from: source.elementId, to: targetId });
+      setNotice(`${elementName(source.elementId)}と${elementName(targetId)}の割り当てを入れ替えました。`);
+    } else {
+      setNotice("種類が違う要素どうし(キーとトラックボールなど)は入れ替えられません。");
+    }
+  }
+
+  /** タップ(ほとんど動かさずに離した)。一覧のキーなら置く先を選ぶ状態に、キー図の要素なら handleElementClick */
+  function handleTap(source: DragSource) {
+    if (source.kind === "palette") {
+      toggleArmed(source.label);
+    } else {
+      handleElementClick(source.elementId);
+    }
+  }
+
+  function toggleArmed(label: string) {
+    setArmedLabel((current) => (current === label ? null : label));
+  }
+
+  const drag = useKeyDrag(handleDrop, handleTap);
+
+  function handleElementClick(elementId: string) {
+    if (state.comboPicking !== null) {
+      dispatch({ type: "toggleComboElement", elementId });
+    } else if (armedLabel) {
+      placeLabel(armedLabel, elementId);
+    } else {
+      dispatch({ type: "selectElement", elementId });
+    }
+  }
+
+  function startElementDrag(elementId: string, e: React.PointerEvent) {
+    const label =
+      currentLayer.assignments.find((a) => a.elementId === elementId && a.action === "press")?.label ??
+      currentLayer.assignments.find((a) => a.elementId === elementId)?.label ??
+      elementName(elementId);
+    drag.start({ kind: "element", elementId, label }, e);
+  }
 
   function discardDraft() {
     if (!window.confirm("下書きを捨てて、最初の状態からやり直します。よろしいですか?")) return;
@@ -188,16 +287,67 @@ export function LayoutEditor({
           キー図のキー(ダイヤル・トラックボール・スクロールパッドも)をクリックすると、表示する名前を入力できます。
         </p>
         <LayerTabs layers={state.layers} currentLayer={state.currentLayer} dispatch={dispatch} />
+        {state.comboPicking === null && (
+          <KeyPalette
+            armedLabel={armedLabel}
+            onPointerDownKey={(label, e) => drag.start({ kind: "palette", label }, e)}
+            onTapKey={toggleArmed}
+          />
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "undo" })}
+            disabled={!canUndo(history)}
+            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 disabled:opacity-40"
+          >
+            ↶ 元に戻す
+          </button>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "redo" })}
+            disabled={!canRedo(history)}
+            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 disabled:opacity-40"
+          >
+            ↷ やり直す
+          </button>
+          <span className="text-xs text-zinc-500">キー図のキーを別のキーへドラッグすると、割り当てを入れ替えられます。</span>
+        </div>
+        {armedLabel && (
+          <div role="status" className="flex flex-wrap items-center gap-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <span>{`「${armedLabel}」を置くキーを、キー図でタップしてください。`}</span>
+            <button type="button" onClick={() => setArmedLabel(null)} className="underline underline-offset-4">
+              やめる
+            </button>
+          </div>
+        )}
+        {notice && (
+          <p role="status" data-testid="drop-notice" className="text-sm text-zinc-700">
+            {notice}
+          </p>
+        )}
         <EditableKeymap
           physicalLayout={physicalLayout}
           layer={currentLayer}
           combos={state.combos}
           selectedElementId={state.selectedElementId}
           pickedElementIds={pickedElementIds}
-          onElementClick={(elementId) =>
-            dispatch(state.comboPicking === null ? { type: "selectElement", elementId } : { type: "toggleComboElement", elementId })
-          }
+          onElementClick={handleElementClick}
+          onElementPointerDown={startElementDrag}
         />
+        {pendingDrop && elementOf(pendingDrop.elementId) && (
+          <ActionChooser
+            label={pendingDrop.label}
+            elementName={elementName(pendingDrop.elementId)}
+            elementType={elementOf(pendingDrop.elementId)!.type}
+            onChoose={(action) => {
+              dispatch({ type: "setAssignment", elementId: pendingDrop.elementId, action, label: pendingDrop.label });
+              setNotice(`${elementName(pendingDrop.elementId)}に「${pendingDrop.label}」を置きました。`);
+              setPendingDrop(null);
+            }}
+            onCancel={() => setPendingDrop(null)}
+          />
+        )}
         {state.selectedElementId && state.comboPicking === null && (
           <ElementPanel
             physicalLayout={physicalLayout}
@@ -206,6 +356,15 @@ export function LayoutEditor({
             onChange={(action, label) => dispatch({ type: "setAssignment", elementId: state.selectedElementId!, action, label })}
             onClose={() => dispatch({ type: "selectElement", elementId: null })}
           />
+        )}
+        {drag.ghost && (
+          <div
+            aria-hidden
+            style={{ position: "fixed", left: drag.ghost.x + 8, top: drag.ghost.y + 8, pointerEvents: "none", zIndex: 50 }}
+            className="rounded-md bg-amber-400 px-2.5 py-1.5 text-sm font-bold text-zinc-900 shadow-lg"
+          >
+            {drag.ghost.label}
+          </div>
         )}
       </section>
 

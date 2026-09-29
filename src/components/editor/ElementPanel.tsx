@@ -33,7 +33,8 @@ export function ElementPanel({
 }) {
   const element = physicalLayout.elements.find((e) => e.id === elementId);
   if (!element) return null;
-  const title = element.legend ? `${element.legend}(${TYPE_NAMES[element.type]})` : TYPE_NAMES[element.type];
+  const typeName = TYPE_NAMES[element.type];
+  const title = element.legend && element.legend !== typeName ? `${element.legend}(${typeName})` : typeName;
 
   return (
     <section aria-label="割り当ての編集" className="flex flex-col gap-3 rounded-xl border-2 border-amber-400 bg-amber-50 p-4">

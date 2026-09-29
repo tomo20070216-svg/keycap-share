@@ -3,7 +3,7 @@
 import { KeymapDiagram, diagramItemBox, getKeymapDiagramSize } from "@/components/KeymapDiagram";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
-import type { Combo, ElementType, KeyboardPhysicalLayout, Layer } from "@/lib/schemas";
+import type { Combo, ElementType, KeyboardPhysicalLayout, Layer, Side } from "@/lib/schemas";
 
 /**
  * クリックできるキー図(エディタ用)。描画は画面・OGP画像と同じ KeymapDiagram のまま(plan.md 方針3)で、
@@ -17,14 +17,31 @@ const TYPE_NAMES: Record<ElementType, string> = {
   trackball: "トラックボール",
 };
 
-export function EditableKeymap({
-  physicalLayout,
-  layer,
-  combos,
-  selectedElementId,
-  pickedElementIds,
-  onElementClick,
-}: {
+/**
+ * 広い画面では左右を並べた1枚、狭い画面(スマホなど)では左手・右手を縦に並べて大きく表示する
+ * (閲覧ページの P3-4 と同じ考え方。指で狙いやすくするため)。
+ */
+export function EditableKeymap(props: Omit<EditableKeymapSideProps, "side">) {
+  return (
+    <>
+      <div className="hidden md:block">
+        <EditableKeymapSide {...props} />
+      </div>
+      <div className="flex flex-col gap-3 md:hidden">
+        <div className="flex flex-col gap-1">
+          <div className="text-xs font-bold text-zinc-500">左手</div>
+          <EditableKeymapSide {...props} side="left" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="text-xs font-bold text-zinc-500">右手</div>
+          <EditableKeymapSide {...props} side="right" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+type EditableKeymapSideProps = {
   physicalLayout: KeyboardPhysicalLayout;
   layer: Layer;
   combos: Combo[];
@@ -32,24 +49,40 @@ export function EditableKeymap({
   /** コンボのキーを選んでいるときの、選ばれているキー */
   pickedElementIds: string[] | null;
   onElementClick: (elementId: string) => void;
-}) {
+  /** ドラッグ(入れ替え)とタップを扱うため(useKeyDrag)。指定しないときは click でタップを扱う */
+  onElementPointerDown?: (elementId: string, e: React.PointerEvent) => void;
+  /** 片側だけを描く */
+  side?: Side;
+};
+
+function EditableKeymapSide({
+  physicalLayout,
+  layer,
+  combos,
+  selectedElementId,
+  pickedElementIds,
+  onElementClick,
+  onElementPointerDown,
+  side,
+}: EditableKeymapSideProps) {
   // 描きかけのコンボ(キーが2つ未満)は番号を付けない
   const drawableCombos = combos.filter((c) => c.elementIds.length >= 2);
-  const model = buildKeymapRenderModel(physicalLayout, layer, { combos: drawableCombos });
+  const model = buildKeymapRenderModel(physicalLayout, layer, { combos: drawableCombos, side });
   const size = getKeymapDiagramSize(model);
   const picking = pickedElementIds !== null;
 
   return (
     <ResponsiveKeymap width={size.width} height={size.height}>
       <div style={{ position: "relative", width: size.width, height: size.height }}>
-        <KeymapDiagram physicalLayout={physicalLayout} layer={layer} combos={drawableCombos} />
+        <KeymapDiagram physicalLayout={physicalLayout} layer={layer} combos={drawableCombos} side={side} />
         {model.items.map((item) => {
           const b = diagramItemBox(item);
           const selected = !picking && item.elementId === selectedElementId;
           const picked = picking && pickedElementIds.includes(item.elementId);
           // コンボのキーを選んでいるときは、キー以外は選べない
           const disabled = picking && item.type !== "key";
-          const name = item.legend ? `${item.legend}(${TYPE_NAMES[item.type]})` : TYPE_NAMES[item.type];
+          const typeName = TYPE_NAMES[item.type];
+          const name = item.legend && item.legend !== typeName ? `${item.legend}(${typeName})` : typeName;
           return (
             <button
               key={item.elementId}
@@ -58,7 +91,11 @@ export function EditableKeymap({
               aria-label={picking ? `${name}をコンボの対象にする` : `${name}の割り当てを編集`}
               aria-pressed={picking ? picked : selected}
               disabled={disabled}
-              onClick={() => onElementClick(item.elementId)}
+              // マウス・指のタップは onPointerDown からの処理(useKeyDrag)で扱う。click はキーボードで押したときだけ
+              onClick={(e) => {
+                if (e.detail === 0 || !onElementPointerDown) onElementClick(item.elementId);
+              }}
+              onPointerDown={onElementPointerDown ? (e) => onElementPointerDown(item.elementId, e) : undefined}
               style={{
                 position: "absolute",
                 left: b.left,
@@ -71,6 +108,8 @@ export function EditableKeymap({
                 outline: selected ? "3px solid #f59e0b" : picked ? "3px dashed #2563eb" : "none",
                 outlineOffset: 2,
                 cursor: disabled ? "not-allowed" : "pointer",
+                // 指でのドラッグ中に画面がスクロールしないようにする
+                touchAction: picking ? "auto" : "none",
               }}
               className="hover:bg-amber-300/20 focus-visible:bg-amber-300/30"
             />
