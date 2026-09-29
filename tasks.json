@@ -1136,13 +1136,18 @@
       "phase": 6,
       "role": "reviewer",
       "task": "評価役が evals/acceptance.md フェーズ6の確認方法で確認する: 2つの異なる秘密キーで、自分の投稿は編集・削除でき、他人の投稿はできないこと。投稿数の制限が機能すること(フェーズ6の完了の目安)",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "2つの異なる秘密キーでのテスト結果のログがある",
         "投稿数の制限が機能することのログがある",
         "本番への反映(push)とDBの変更は人間の承認を得てから行っている"
       ],
-      "evidence": [],
+      "evidence": [
+        "2つの異なる秘密キーでのテスト結果ログ(本番と同じSupabase): Aのキーで A を編集・Bのキーで A は編集・削除できない・Bのキーで B を削除(evidence/p6-8/README.md、evidence/p6-2/README.md)。画面での確認 12/12(evidence/p6-3/)",
+        "投稿数の制限のログ: 同じ接続元の6件目が拒否される(evidence/p6-4/README.md)",
+        "人間の承認(push OK)を得て本番に反映(ad9c7ed..3cdb62e)。本番で keepalive は合言葉なし・違う合言葉で401、配列ページに「問題を報告する」、存在しないページは404。DBの変更0004も人間の承認を得て適用済み",
+        "評価役確認: passes 3条件と evals/acceptance.md フェーズ6の確認方法を満たすことを確認した"
+      ],
       "dependencies": [
         "P6-7"
       ]
