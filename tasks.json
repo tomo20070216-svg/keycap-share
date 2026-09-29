@@ -877,12 +877,17 @@
       "phase": 5,
       "role": "executor",
       "task": "キーの一覧(パレット)のデータ: Keychron Launcher で設定できるキーの種類をもとに、日本語の表示名で並べる(レイヤーのキーは「fn1(押している間)」のような日本語。人間の決定)。出典(Launcher、確認日)を記録する",
-      "status": "todo",
+      "status": "done",
       "passes": [
         "各キーの表示名が1〜40文字で、一覧の中で重複しないことをテストで確認している",
         "出典(Keychron Launcher、確認日)が docs に記録されている"
       ],
-      "evidence": [],
+      "evidence": [
+        "src/lib/key-palette.ts を作成: 16種類(よく使う・日本語入力・英字・数字・記号・編集・移動・ファンクション(F1〜F24)・テンキー・マウス・メディア・レイヤー(0〜7の押している間/ON/OFF/へ移動)・接続・本体・Mac・Windows・マクロ(M0〜M15)・トラックボール)。表示名は日本語",
+        "src/lib/__tests__/key-palette.test.ts 4件成功: 表示名は1〜40文字で割り当てとして保存でき、一覧の中で重複しない。Launcherの主な種類がそろっている",
+        "出典(Keychron Launcher、2026-09-29確認、未確認点)を docs/requirements.md「パレットの出典」に記録",
+        "評価役確認: passes 2条件を確認した"
+      ],
       "dependencies": [
         "P5-7"
       ]
