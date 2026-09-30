@@ -100,3 +100,16 @@ describe("小さなキー図(一覧のカード)で長い名前がはみ出さ�
     }
   });
 });
+
+describe("2行に分ける位置(フェーズ8)", () => {
+  it("英単語の途中では分けない(Bluetooth 1 → Bluetooth / 1)", () => {
+    expect(splitIntoTwoLines("Bluetooth 1")).toEqual(["Bluetooth", "1"]);
+  });
+  it("開きかっこの直後では分けず、かっこの前で分ける", () => {
+    expect(splitIntoTwoLines("レイヤー1(押している間)")).toEqual(["レイヤー1", "(押している間)"]);
+    expect(splitIntoTwoLines("戻る(マウス)")).toEqual(["戻る", "(マウス)"]);
+  });
+  it("分けられる位置が単語の中しかないときは、今までどおり真ん中あたりで分ける", () => {
+    expect(splitIntoTwoLines("BackSpace")).toEqual(["Back", "Space"]);
+  });
+});

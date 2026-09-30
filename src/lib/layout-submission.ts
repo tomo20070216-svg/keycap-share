@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { orcaEcho } from "@/keyboards/orca-echo";
+import { KEYBOARDS, supportedKeyboardNames } from "@/keyboards";
 import { validateCombos, validateLayersAgainstPhysicalLayout } from "@/lib/layout-validation";
 import { LayoutInputSchema, MAX_LAYERS, type KeyboardPhysicalLayout, type LayoutInput } from "@/lib/schemas";
 import { checkDescriptionUrls } from "@/lib/spam-rules";
@@ -10,10 +10,10 @@ import { checkDescriptionUrls } from "@/lib/spam-rules";
  * エラーの文言は docs/voice.md の方針(何が起きたか + 次に何をすればよいか)。
  */
 
-/** 投稿できる機種(今は Orca echo だけ。docs/mission.md) */
-export const SUPPORTED_KEYBOARDS: Record<string, KeyboardPhysicalLayout> = {
-  [orcaEcho.id]: orcaEcho,
-};
+/** 投稿できる機種の物理レイアウト(機種の一覧は src/keyboards/index.ts。フェーズ8) */
+export const SUPPORTED_KEYBOARDS: Record<string, KeyboardPhysicalLayout> = Object.fromEntries(
+  KEYBOARDS.map((k) => [k.layout.id, k.layout])
+);
 
 export type ParsedLayoutInput = z.output<typeof LayoutInputSchema>;
 
@@ -59,7 +59,7 @@ export function validateSubmission(raw: unknown): SubmissionValidation {
 
   const keyboard = SUPPORTED_KEYBOARDS[input.keyboardId];
   if (!keyboard) {
-    return { ok: false, errors: ["この機種にはまだ対応していません。今は Keychron Orca echo だけ投稿できます。"] };
+    return { ok: false, errors: [`この機種にはまだ対応していません。今は ${supportedKeyboardNames()} を投稿できます。`] };
   }
 
   const errors: string[] = [];

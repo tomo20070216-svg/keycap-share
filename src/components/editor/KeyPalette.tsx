@@ -1,24 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { KEY_PALETTE } from "@/lib/key-palette";
+import type { PaletteCategory } from "@/lib/key-palette";
 
 /**
  * キーの一覧(パレット)(P5-10)。
  * キーをキー図へドラッグして置く。または、キーをタップしてからキー図のキーをタップして置く。
  */
 export function KeyPalette({
+  categories,
   armedLabel,
   onPointerDownKey,
   onTapKey,
 }: {
+  /** キーの一覧(機種のツールに合わせたもの。keyPaletteFor) */
+  categories: PaletteCategory[];
   /** タップで選んでいるキー(次にキー図をタップすると置かれる) */
   armedLabel: string | null;
   onPointerDownKey: (label: string, e: React.PointerEvent) => void;
   onTapKey: (label: string) => void;
 }) {
-  const [categoryId, setCategoryId] = useState(KEY_PALETTE[0].id);
-  const category = KEY_PALETTE.find((c) => c.id === categoryId) ?? KEY_PALETTE[0];
+  const [categoryId, setCategoryId] = useState(categories[0].id);
+  const category = categories.find((c) => c.id === categoryId) ?? categories[0];
 
   return (
     <section aria-label="キーの一覧" className="flex flex-col gap-2 rounded-xl border border-zinc-200 p-3">
@@ -27,7 +30,7 @@ export function KeyPalette({
         キーをキー図へドラッグして置けます(タップしてから、キー図のキーをタップしても置けます)。
       </p>
       <div role="tablist" aria-label="キーの種類" className="flex flex-wrap gap-1">
-        {KEY_PALETTE.map((c) => (
+        {categories.map((c) => (
           <button
             key={c.id}
             type="button"

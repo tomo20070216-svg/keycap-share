@@ -53,6 +53,7 @@ const COLORS = {
 const ELEMENT_TYPE_NAMES: Record<ElementType, string> = {
   key: "キー",
   dial: "ダイヤル",
+  knob: "ダイヤル",
   scrollpad: "スクロール",
   trackball: "ボール",
 };
@@ -106,6 +107,7 @@ function cornerRadius(item: RenderItem, w: number, h: number, unit: number) {
   switch (item.type) {
     case "trackball":
     case "scrollpad":
+    case "knob":
       return Math.min(w, h) / 2;
     case "dial":
       return unit * 0.25;
@@ -392,7 +394,7 @@ export function KeymapDiagram({
           };
           return (
             <div key={item.elementId} style={style}>
-              {item.type === "key" ? (
+              {item.type === "key" || (item.type === "knob" && item.primary) ? (
                 <KeyLabels item={item} width={b.width} unit={unit} fontFamily={fontFamily} />
               ) : (
                 <DeviceLabels item={item} width={b.width} height={b.height} unit={unit} fontFamily={fontFamily} />

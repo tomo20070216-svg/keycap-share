@@ -45,9 +45,22 @@ export function parseSortParam(value: string | string[] | undefined): LayoutSort
   return value === "popular" ? "popular" : null;
 }
 
-/** 一覧のURL(並べ替えとページ)。新着順・1ページ目は省略する */
-export function listHref(basePath: string, options: { page?: number; sort?: LayoutSort } = {}): string {
+/**
+ * URLの ?keyboard= の値を読む(機種での絞り込み。フェーズ8)。省略は「すべて」(null)、
+ * 対応している機種の id ならその id。それ以外は false(= 404にする)
+ */
+export function parseKeyboardParam(value: string | string[] | undefined, supportedIds: string[]): string | null | false {
+  if (value === undefined) return null;
+  return typeof value === "string" && supportedIds.includes(value) ? value : false;
+}
+
+/** 一覧のURL(機種・並べ替え・ページ)。すべての機種・新着順・1ページ目は省略する */
+export function listHref(
+  basePath: string,
+  options: { page?: number; sort?: LayoutSort; keyboard?: string | null } = {}
+): string {
   const params = new URLSearchParams();
+  if (options.keyboard) params.set("keyboard", options.keyboard);
   if (options.sort === "popular") params.set("sort", "popular");
   if (options.page && options.page > 1) params.set("page", String(options.page));
   const query = params.toString();

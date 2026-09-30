@@ -47,11 +47,17 @@ export type FittedLabel = { fontSize: number; lines: string[] };
  */
 export function splitIntoTwoLines(text: string): [string, string] {
   const chars = [...text];
-  const candidates: { index: number; natural: boolean }[] = [];
+  const isOpen = (c: string) => c === "(" || c === "(" || c === "[" || c === "「";
+  const isWordChar = (c: string) => /[A-Za-z0-9]/.test(c);
+  const candidates: { index: number; natural: boolean; insideWord: boolean }[] = [];
   for (let i = 1; i < chars.length; i++) {
-    const natural = chars[i] === " " || chars[i - 1] === " " || isHalfWidth(chars[i]) !== isHalfWidth(chars[i - 1]);
-    candidates.push({ index: i, natural });
+    // 開きかっこの直後では分けない(「レイヤー1(」「押している間)」のようにならないように)
+    if (isOpen(chars[i - 1])) continue;
+    const natural =
+      chars[i] === " " || chars[i - 1] === " " || isOpen(chars[i]) || isHalfWidth(chars[i]) !== isHalfWidth(chars[i - 1]);
+    candidates.push({ index: i, natural, insideWord: isWordChar(chars[i - 1]) && isWordChar(chars[i]) });
   }
+  if (candidates.length === 0) return [text, ""];
   const score = (index: number) =>
     Math.max(
       estimateTextWidthEm(chars.slice(0, index).join("").trim()),
@@ -60,7 +66,9 @@ export function splitIntoTwoLines(text: string): [string, string] {
   const best = (list: typeof candidates) =>
     list.reduce((a, b) => (score(b.index) < score(a.index) ? b : a));
 
-  const any = best(candidates);
+  // 英単語の途中(「Bluet」「ooth 1」)で分けるのは、ほかに分けられる位置がないときだけにする
+  const outsideWords = candidates.filter((c) => !c.insideWord);
+  const any = best(outsideWords.length > 0 ? outsideWords : candidates);
   const naturals = candidates.filter((c) => c.natural);
   // 区切りのよい位置が、最適な位置より1文字分以上長くならないなら、そちらを使う
   const chosen = naturals.length > 0 && score(best(naturals).index) <= score(any.index) + 1 ? best(naturals) : any;

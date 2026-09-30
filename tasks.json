@@ -1374,6 +1374,78 @@
       "dependencies": [
         "P6-6"
       ]
+    },
+    {
+      "id": "P8-1",
+      "phase": 8,
+      "role": "planner",
+      "task": "対応機種を増やす計画(人間の決定: 1機種目は Cornix、工場出荷時の配列から始める、キーの一覧は Vial に合わせる。公開情報の調査は許可済み)",
+      "status": "done",
+      "passes": [
+        "計画と調べた出典を人間に示し、承認を得ている"
+      ],
+      "evidence": [
+        "2026-09-30 人間が「はい。すすめてください。」と承認。出典は docs/keyboards/cornix.md"
+      ],
+      "dependencies": [
+        "P7-12"
+      ]
+    },
+    {
+      "id": "P8-2",
+      "phase": 8,
+      "role": "executor",
+      "task": "Cornix の物理レイアウト(src/keyboards/cornix.ts)。有志の Vial 定義(3つで一致)から作る。押し込めるダイヤル(knob: 押す・右回し・左回し)を新しい部品の種類として追加。実物で確認するまでは仮の値",
+      "status": "in_progress",
+      "passes": [
+        "左右24キーずつ・ダイヤル左右1つずつ・要素が重ならない・左右対称の単体テストがある",
+        "Orca echo の表示が変わらないことを確認している"
+      ],
+      "dependencies": [
+        "P8-1"
+      ]
+    },
+    {
+      "id": "P8-3",
+      "phase": 8,
+      "role": "executor",
+      "task": "Cornix の工場出荷時配列(src/keyboards/cornix-factory-default.ts)。工場出荷時の書き出し(.vil)から、キーの一覧と同じ表示名で書き起こす",
+      "status": "in_progress",
+      "passes": [
+        "投稿の検証を通り、通常レイヤー・ダイヤルの割り当てが出典と一致する単体テストがある"
+      ],
+      "dependencies": [
+        "P8-2"
+      ]
+    },
+    {
+      "id": "P8-4",
+      "phase": 8,
+      "role": "executor",
+      "task": "機種を選べるようにする: 投稿画面の機種選択(/new → /new?keyboard=)、一覧の機種での絞り込み(?keyboard=)、トップの説明文、機種ごとのハッシュタグ、機種ごとのキーの一覧(Launcher / Vial)",
+      "status": "in_progress",
+      "passes": [
+        "機種を選ぶ画面・Cornix の投稿画面(PC・スマホ)・絞り込みの画面での確認結果(スクリーンショット)がある",
+        "不正な機種の指定は 404(投稿画面は見つからない表示)"
+      ],
+      "dependencies": [
+        "P8-2"
+      ]
+    },
+    {
+      "id": "P8-5",
+      "phase": 8,
+      "role": "executor",
+      "task": "DB: Cornix の機種の登録と、Cornix 工場出荷時配列(一覧に出す)の保存。コードを本番に反映してから一覧に出す(docs/operations.md 6章)",
+      "status": "in_progress",
+      "passes": [
+        "結合テストで Cornix の保存・取得・機種での絞り込みを確認したログがある",
+        "本番で Cornix の配列ページ・一覧・OGP画像が表示されることの確認結果がある"
+      ],
+      "dependencies": [
+        "P8-3",
+        "P8-4"
+      ]
     }
   ]
 }

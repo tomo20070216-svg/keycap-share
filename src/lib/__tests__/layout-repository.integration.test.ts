@@ -6,6 +6,8 @@
  */
 import { afterAll, describe, expect, it } from "vitest";
 import { orcaEcho } from "@/keyboards/orca-echo";
+import { cornix } from "@/keyboards/cornix";
+import { cornixFactoryDefaultLayers } from "@/keyboards/cornix-factory-default";
 import { orcaEchoFactoryDefaultLayers } from "@/keyboards/orca-echo-factory-default";
 import {
   orcaEchoComboSampleCombos,
@@ -485,5 +487,45 @@ describe("定期実行の記録(Supabase、0006適用後。P7-12)", () => {
     const { data: left } = await db.from("cron_runs").select("id").eq("id", data!.id);
     expect(left).toEqual([]);
     console.log(`31日前の記録(id ${data!.id}): 次の書き込みで削除された`);
+  });
+});
+
+describe("Cornix(Supabase、フェーズ8)", () => {
+  // Cornix の工場出荷時配列は、Orca echo と同じく「最初の1件」として一覧に出す(人間の承認、2026-09-30)
+  const CORNIX_FACTORY_DEFAULT_SLUG = "cornix-factory-default";
+  const input: LayoutInput = {
+    keyboardId: cornix.id,
+    title: "Cornix 工場出荷時配列",
+    description: "Cornix(Jezail Funder)の工場出荷時の配列を書き起こしたもの。ダイヤルは左が音量、右がスクロール。",
+    tags: ["工場出荷時"],
+    layers: cornixFactoryDefaultLayers,
+  };
+
+  it("Cornix の物理レイアウトを登録し、公開用キーで取得できる", async () => {
+    await saveKeyboard(cornix);
+    expect(await getKeyboard(cornix.id)).toEqual(cornix);
+  });
+
+  it("Cornix の工場出荷時配列を保存し、取得した内容が元データと一致する。機種で絞り込める", async () => {
+    let layout = await getLayoutBySlug(CORNIX_FACTORY_DEFAULT_SLUG);
+    if (layout) {
+      console.log(`保存済みの配列を使用: slug=${layout.slug}`);
+    } else {
+      layout = (await createLayout(input, { slug: CORNIX_FACTORY_DEFAULT_SLUG })).layout;
+      console.log(`新規保存: slug=${layout.slug} id=${layout.id}`);
+    }
+    expect(layout.keyboardId).toBe("cornix");
+    expect(layout.title).toBe(input.title);
+    expect(normalize(layout.layers)).toEqual(normalize(cornixFactoryDefaultLayers));
+
+    const onlyCornix = await listLayouts({ keyboardId: "cornix", perPage: 50 });
+    expect(onlyCornix.layouts.length).toBeGreaterThan(0);
+    expect(onlyCornix.layouts.every((l) => l.keyboardId === "cornix")).toBe(true);
+    const onlyOrca = await listLayouts({ keyboardId: "orca-echo", perPage: 50 });
+    expect(onlyOrca.layouts.every((l) => l.keyboardId === "orca-echo")).toBe(true);
+    const total = layout.layers.reduce((n, l) => n + l.assignments.length, 0);
+    console.log(
+      `Cornix: ${layout.layers.length}レイヤー / 割り当て${total}件。絞り込み: Cornix ${onlyCornix.total}件、Orca echo ${onlyOrca.total}件`
+    );
   });
 });

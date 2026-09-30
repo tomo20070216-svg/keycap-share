@@ -13,6 +13,7 @@ import type { Combo, ElementType, KeyboardPhysicalLayout, Layer, Side } from "@/
 const TYPE_NAMES: Record<ElementType, string> = {
   key: "キー",
   dial: "ダイヤル",
+  knob: "ダイヤル",
   scrollpad: "スクロールパッド",
   trackball: "トラックボール",
 };

@@ -16,7 +16,12 @@ export const ACTION_NAMES: Record<Action, string> = {
   tap: "タップ",
 };
 
-const TYPE_NAMES = { key: "キー", dial: "ダイヤル", scrollpad: "スクロールパッド", trackball: "トラックボール" } as const;
+/** 要素の種類に合わせた操作の名前(押し込めるダイヤルの press は「押す」) */
+export function actionName(type: KeyboardPhysicalLayout["elements"][number]["type"], action: Action): string {
+  return type === "knob" && action === "press" ? "押す(押し込み)" : ACTION_NAMES[action];
+}
+
+const TYPE_NAMES = { key: "キー", dial: "ダイヤル", knob: "ダイヤル", scrollpad: "スクロールパッド", trackball: "トラックボール" } as const;
 
 export function ElementPanel({
   physicalLayout,
@@ -67,7 +72,7 @@ export function ElementPanel({
           const value = layer.assignments.find((a) => a.elementId === elementId && a.action === action)?.label ?? "";
           return (
             <label key={action} className="flex flex-col gap-1 text-sm">
-              <span className="font-bold text-zinc-700">{ACTION_NAMES[action]}</span>
+              <span className="font-bold text-zinc-700">{actionName(element.type, action)}</span>
               <input
                 type="text"
                 value={value}

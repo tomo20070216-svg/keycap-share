@@ -4,13 +4,14 @@ import { layoutPath, tagPath } from "@/components/LayoutView";
 import { LinkPendingHint } from "@/components/LinkPendingHint";
 import { ResponsiveKeymap } from "@/components/ResponsiveKeymap";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
+import { KEYBOARDS } from "@/keyboards";
 import { formatDateJa, listHref, totalPages, type LayoutSort } from "@/lib/layout-page-utils";
 import type { KeyboardPhysicalLayout, Layout } from "@/lib/schemas";
 
 /**
  * 配列の一覧(トップの新着一覧・タグでの絞り込みで共通)。
  * カード: 通常レイヤー(番号が最小のレイヤー)の小さなキー図・タイトル・機種名・投稿者名・投稿日・⭐️の数・タグ。
- * 上に「新着順 | 人気順」の切り替え(P7-7)。
+ * 上に「新着順 | 人気順」の切り替え(P7-7)と、機種での絞り込み(フェーズ8)。
  */
 
 /** カードのキー図の、キー1つ分の大きさ(px)。縮小表示なので文字は小さいが、配置の雰囲気が分かる */
@@ -72,6 +73,7 @@ export function LayoutList({
   total,
   page,
   sort,
+  keyboard,
   basePath,
   emptyMessage,
 }: {
@@ -80,15 +82,17 @@ export function LayoutList({
   total: number;
   page: number;
   sort: LayoutSort;
+  /** 絞り込んでいる機種の id(すべてなら null) */
+  keyboard: string | null;
   /** ページ送りのリンク先(例: "/"、"/tags/日本語入力") */
   basePath: string;
   emptyMessage: string;
 }) {
   const pages = totalPages(total);
-  const pageHref = (n: number) => listHref(basePath, { page: n, sort });
+  const pageHref = (n: number) => listHref(basePath, { page: n, sort, keyboard });
   const sortItem = (value: LayoutSort, label: string) => (
     <Link
-      href={listHref(basePath, { sort: value })}
+      href={listHref(basePath, { sort: value, keyboard })}
       aria-current={sort === value ? "page" : undefined}
       className={`rounded-md border px-3 py-1.5 text-sm ${
         sort === value ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-300 hover:bg-zinc-100"
@@ -100,10 +104,28 @@ export function LayoutList({
   );
   return (
     <div className="flex flex-col gap-6">
-      <nav aria-label="並べ替え" className="flex gap-2">
-        {sortItem("new", "新着順")}
-        {sortItem("popular", "人気順(⭐️の多い順)")}
-      </nav>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <nav aria-label="並べ替え" className="flex gap-2">
+          {sortItem("new", "新着順")}
+          {sortItem("popular", "人気順(⭐️の多い順)")}
+        </nav>
+        <nav aria-label="機種で絞り込む" className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-xs text-zinc-500">機種:</span>
+          {[{ id: null, name: "すべて" }, ...KEYBOARDS.map((k) => ({ id: k.layout.id, name: k.layout.name }))].map((k) => (
+            <Link
+              key={k.id ?? "all"}
+              href={listHref(basePath, { sort, keyboard: k.id })}
+              aria-current={keyboard === k.id ? "page" : undefined}
+              className={`rounded-full border px-3 py-1 text-xs ${
+                keyboard === k.id ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-300 hover:bg-zinc-100"
+              }`}
+            >
+              {k.name}
+              <LinkPendingHint label="" />
+            </Link>
+          ))}
+        </nav>
+      </div>
       {layouts.length === 0 ? (
         <p className="text-zinc-600">{emptyMessage}</p>
       ) : (

@@ -94,6 +94,21 @@ export function isComboActiveOnLayer(combo: Combo, layerNumber: number): boolean
 
 const DEFAULT_SPLIT_GAP = 1;
 
+/** 左手の要素・文字と、右手の要素・文字の間に空ける最小の間隔(キー単位) */
+const MIN_SPLIT_CLEARANCE = 0.15;
+
+/** 左手側(要素と外側の文字)の右端と、右手側の左端の間隔。負ならぶつかっている */
+function splitClearance(items: RenderItem[], labels: OutsideLabel[]): number {
+  const sideOf = new Map(items.map((i) => [i.elementId, i.side]));
+  const spans = (side: Side) => [
+    ...items.filter((i) => i.side === side).map((i) => boundingBox(i)),
+    ...labels.filter((l) => sideOf.get(l.elementId) === side).map((l) => ({ minX: l.x, maxX: l.x + l.width })),
+  ];
+  const leftMax = Math.max(...spans("left").map((b) => b.maxX));
+  const rightMin = Math.min(...spans("right").map((b) => b.minX));
+  return rightMin - leftMax;
+}
+
 /** 回転を考慮した、要素の外接矩形 */
 function boundingBox(el: { x: number; y: number; width: number; height: number; rotation: number }) {
   const rad = (el.rotation * Math.PI) / 180;
@@ -156,15 +171,17 @@ export function buildKeymapRenderModel(
 
   const items: RenderItem[] = elements.map((el) => {
     const get = (action: Action) => labels.get(`${el.id}:${action}`) ?? null;
-    const isKey = el.type === "key";
-    const primary = isKey ? get("press") : null;
-    const secondary = isKey ? get("hold") : null;
-    const extras: RenderLabel[] = isKey
-      ? []
-      : ELEMENT_ACTIONS[el.type].flatMap((action) => {
-          const text = get(action);
-          return text ? [{ action, text }] : [];
-        });
+    // タップ(press)・長押し(hold)は要素の中に大きく、それ以外の操作(回す・上下など)は extras に入れる。
+    // 押し込みのあるダイヤル(knob)は、押す = 中、回す = 外側
+    const actions = ELEMENT_ACTIONS[el.type];
+    const primary = actions.includes("press") ? get("press") : null;
+    const secondary = actions.includes("hold") ? get("hold") : null;
+    const extras: RenderLabel[] = actions
+      .filter((action) => action !== "press" && action !== "hold")
+      .flatMap((action) => {
+        const text = get(action);
+        return text ? [{ action, text }] : [];
+      });
 
     return {
       elementId: el.id,
@@ -185,6 +202,15 @@ export function buildKeymapRenderModel(
   });
 
   const outsideLabels = items.flatMap(buildOutsideLabels);
+
+  // 左右を並べて描くとき、左右の内側に出る文字(Cornix のダイヤルなど)が左右の間でぶつかるなら、
+  // ぶつからないところまで左右の間隔を広げて描き直す(Orca echo のように十分空いていれば変えない)
+  if (!options.side) {
+    const clearance = splitClearance(items, outsideLabels);
+    if (clearance < MIN_SPLIT_CLEARANCE - 1e-9) {
+      return buildKeymapRenderModel(physicalLayout, layer, { ...options, splitGap: splitGap + (MIN_SPLIT_CLEARANCE - clearance) });
+    }
+  }
 
   // 外側の文字が図の範囲からはみ出す場合は、図を広げる(左上がはみ出す場合は全体をずらす)
   const itemBoxes = items.map(boundingBox);
@@ -223,6 +249,18 @@ function buildOutsideLabels(item: RenderItem): OutsideLabel[] {
     return [
       ...label("cw", { x: b.maxX + 0.06, y: cy - 0.48, width: 0.85, height: 0.46, align: "left" }),
       ...label("ccw", { x: b.maxX + 0.06, y: cy + 0.02, width: 0.85, height: 0.46, align: "left" }),
+    ];
+  }
+  if (item.type === "knob") {
+    // 押し込みのあるダイヤル(Cornix)は左右の内側にあるので、文字も内側(左右の間)へ出す。
+    // 左手は右へ、右手は左へ
+    const outside =
+      item.side === "left"
+        ? { x: b.maxX + 0.06, align: "left" as const }
+        : { x: b.minX - 0.06 - 0.85, align: "right" as const };
+    return [
+      ...label("cw", { x: outside.x, y: cy - 0.48, width: 0.85, height: 0.46, align: outside.align }),
+      ...label("ccw", { x: outside.x, y: cy + 0.02, width: 0.85, height: 0.46, align: outside.align }),
     ];
   }
   if (item.type === "trackball") {

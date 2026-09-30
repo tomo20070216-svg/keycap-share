@@ -153,3 +153,51 @@ export const KEY_PALETTE: PaletteCategory[] = [
     ],
   },
 ];
+
+/**
+ * Vial(Cornix など)で使うキーの一覧(フェーズ8)。
+ * 出典: Vial の設定画面のキーの種類(Basic・Media・Macro・Layers・Quantum・Tap Dance・User)と、
+ * Cornix のファームウェア(RMK)の Bluetooth 用のキー(User0〜 = BT0〜。RMK のドキュメント、2026-09-30確認)。
+ * Keychron Launcher の一覧と共通のもの(英字・記号・マウスなど)はそのまま使い、
+ * Launcher だけのもの(Mac・Windows の専用キー、トラックボール、2.4GHz など)は除く。
+ */
+const VIAL_ONLY_REMOVED = new Set(["device", "mac", "windows", "trackball", "layers"]);
+
+export const VIAL_KEY_PALETTE: PaletteCategory[] = [
+  ...KEY_PALETTE.filter((c) => !VIAL_ONLY_REMOVED.has(c.id) && c.id !== "macros"),
+  {
+    id: "layers",
+    name: "レイヤー",
+    keys: LAYER_NUMBERS.flatMap((n) => [
+      { label: `レイヤー${n}(押している間)`, hint: `押している間だけレイヤー${n}になる(MO)` },
+      { label: `レイヤー${n}(ON/OFF)`, hint: `押すたびにレイヤー${n}のON/OFFを切り替える(TG)` },
+      { label: `レイヤー${n}へ移動`, hint: `レイヤー${n}へ切り替えたままにする(TO)` },
+      { label: `レイヤー${n}(1回だけ)`, hint: `次に押す1キーだけレイヤー${n}になる(OSL)` },
+      { label: `レイヤー${n}(長押し/2回タップ)`, hint: `押している間はレイヤー${n}、素早く2回押すと切り替えたままにする(TT)` },
+    ]),
+  },
+  {
+    id: "device",
+    name: "Bluetooth・接続",
+    keys: [
+      ...[1, 2, 3, 4, 5].map((n) => ({ label: `Bluetooth ${n}`, hint: `Bluetooth の接続先${n}に切り替える(長押し5秒でペアリングし直す)` })),
+      { label: "次のBluetooth", hint: "次の接続先に切り替える" },
+      { label: "前のBluetooth", hint: "前の接続先に切り替える" },
+      { label: "接続先の解除", hint: "今の接続先のペアリング情報を消す" },
+      { label: "USB/無線の切り替え", hint: "USB と Bluetooth のどちらで送るかを切り替える" },
+      { label: "左右の接続の解除", hint: "左右のつながりの情報を消す(5秒長押し)" },
+    ],
+  },
+  { id: "macros", name: "マクロ", keys: keys(...range(0, 15).map((n) => `M${n}`)) },
+  {
+    id: "tapdance",
+    name: "タップダンス",
+    keys: range(0, 15).map((n) => ({ label: `TD${n}`, hint: `タップダンス${n}(押し方で入力が変わる。中身は説明欄に書いてください)` })),
+  },
+];
+
+/** キーマップを変えるツールに合わせたキーの一覧 */
+export function keyPaletteFor(tool: "keychron-launcher" | "vial"): PaletteCategory[] {
+  return tool === "vial" ? VIAL_KEY_PALETTE : KEY_PALETTE;
+}
+

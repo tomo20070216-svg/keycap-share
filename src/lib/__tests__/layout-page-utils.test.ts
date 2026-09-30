@@ -4,6 +4,7 @@ import {
   findLayerByParam,
   formatDateJa,
   listHref,
+  parseKeyboardParam,
   parsePageParam,
   parseSortParam,
   totalPages,
@@ -86,5 +87,21 @@ describe("一覧の並べ替え(P7-7)", () => {
     expect(listHref("/", { page: 2, sort: "new" })).toBe("/?page=2");
     expect(listHref("/", { sort: "popular" })).toBe("/?sort=popular");
     expect(listHref("/tags/%E6%97%A5", { page: 3, sort: "popular" })).toBe("/tags/%E6%97%A5?sort=popular&page=3");
+  });
+});
+
+describe("機種での絞り込み(フェーズ8)", () => {
+  const ids = ["orca-echo", "cornix"];
+  it("?keyboard= は省略ですべて(null)、対応機種ならその id、それ以外は false(404)", () => {
+    expect(parseKeyboardParam(undefined, ids)).toBeNull();
+    expect(parseKeyboardParam("cornix", ids)).toBe("cornix");
+    expect(parseKeyboardParam("corne", ids)).toBe(false);
+    expect(parseKeyboardParam("", ids)).toBe(false);
+    expect(parseKeyboardParam(["cornix"], ids)).toBe(false);
+  });
+  it("一覧のURLに機種を付け、並べ替え・ページ送りでも保つ", () => {
+    expect(listHref("/", { keyboard: "cornix" })).toBe("/?keyboard=cornix");
+    expect(listHref("/", { keyboard: "cornix", sort: "popular", page: 2 })).toBe("/?keyboard=cornix&sort=popular&page=2");
+    expect(listHref("/", { keyboard: null, sort: "new" })).toBe("/");
   });
 });

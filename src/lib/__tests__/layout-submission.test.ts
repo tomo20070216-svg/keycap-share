@@ -55,7 +55,7 @@ describe("validateSubmission エディタからの投稿の検証", () => {
 
   it("対応していない機種・存在しないキー・キー以外を含むコンボ・同じ番号のレイヤーは拒否する", () => {
     expect(errorsOf({ ...valid, keyboardId: "other" })).toEqual([
-      "この機種にはまだ対応していません。今は Keychron Orca echo だけ投稿できます。",
+      "この機種にはまだ対応していません。今は Keychron Orca echo と Cornix を投稿できます。",
     ]);
     expect(
       errorsOf({ ...valid, layers: [{ layerNumber: 0, layerName: "通常", assignments: [{ elementId: "NO-SUCH", action: "press", label: "x" }] }] })

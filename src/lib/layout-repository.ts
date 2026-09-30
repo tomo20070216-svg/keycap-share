@@ -236,11 +236,12 @@ export type LayoutListResult = {
 /**
  * 一覧用: 一覧に出す配列(is_listed)を取得する。
  * sort: 新着順(省略時)・人気順(⭐️の多い順。同じ数なら新しい順。P7-7)。
+ * keyboardId を指定すると、その機種の配列だけに絞り込む(フェーズ8)。
  * tag を指定すると、そのタグが付いた配列だけに絞り込む。
  * page は1始まり。
  */
 export async function listLayouts(
-  options: { page?: number; perPage?: number; tag?: string; sort?: "new" | "popular" } = {}
+  options: { page?: number; perPage?: number; tag?: string; sort?: "new" | "popular"; keyboardId?: string | null } = {}
 ): Promise<LayoutListResult> {
   const page = Math.max(1, Math.floor(options.page ?? 1));
   const perPage = Math.min(50, Math.max(1, Math.floor(options.perPage ?? 20)));
@@ -260,6 +261,7 @@ export async function listLayouts(
   }
 
   let query = supabase.from("layouts").select(LAYOUT_SELECT, { count: "exact" }).eq("is_listed", true);
+  if (options.keyboardId) query = query.eq("keyboard_id", options.keyboardId);
   if (options.sort === "popular") query = query.order("star_count", { ascending: false });
   query = query
     .order("created_at", { ascending: false })
@@ -271,6 +273,7 @@ export async function listLayouts(
   if (error?.code === "PGRST103") {
     // 件数を超えたページを指定した場合(Requested range not satisfiable)。空の一覧と総数を返す
     let countQuery = supabase.from("layouts").select("id", { count: "exact", head: true }).eq("is_listed", true);
+    if (options.keyboardId) countQuery = countQuery.eq("keyboard_id", options.keyboardId);
     if (layoutIds) countQuery = countQuery.in("id", layoutIds);
     const { count: totalCount, error: countError } = await countQuery;
     if (countError) throw new Error(`配列の件数の取得に失敗しました: ${countError.message}`);

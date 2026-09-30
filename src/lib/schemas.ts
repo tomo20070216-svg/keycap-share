@@ -9,6 +9,7 @@ import { z } from "zod";
 export const ElementTypeSchema = z.enum([
   "key",
   "dial",
+  "knob",
   "scrollpad",
   "trackball",
 ]);
@@ -20,7 +21,8 @@ export type Side = z.infer<typeof SideSchema>;
 /**
  * 要素が対応する「操作(action)」。表示用の名前を割り当てる最小単位。
  * - key: press(タップ) / hold(長押し)
- * - dial: cw(右回し) / ccw(左回し) — 押し込みなし
+ * - dial: cw(右回し) / ccw(左回し) — 押し込みなし(Orca echo)
+ * - knob: press(押す) / cw(右回し) / ccw(左回し) — 押し込みのあるダイヤル(Cornix。フェーズ8)
  * - scrollpad: up / down / tap
  * - trackball: 通常のポインタ操作(カーソル移動)に加え、レイヤー切り替え中は
  *   上下左右への操作(スワイプ)に別の機能(コピー、文字入力など)を割り当てられる。
@@ -43,6 +45,7 @@ export type Action = z.infer<typeof ActionSchema>;
 export const ELEMENT_ACTIONS: Record<ElementType, Action[]> = {
   key: ["press", "hold"],
   dial: ["cw", "ccw"],
+  knob: ["press", "cw", "ccw"],
   scrollpad: ["up", "down", "tap"],
   trackball: ["up", "down", "left", "right"],
 };

@@ -9,6 +9,8 @@ import { ComboEditor, MacroEditor } from "@/components/editor/ComboMacroEditor";
 import { EditableKeymap } from "@/components/editor/EditableKeymap";
 import { ElementPanel } from "@/components/editor/ElementPanel";
 import { KeyPalette } from "@/components/editor/KeyPalette";
+import { findKeyboard } from "@/keyboards";
+import { keyPaletteFor } from "@/lib/key-palette";
 import { LayerTabs } from "@/components/editor/LayerTabs";
 import { TagPicker } from "@/components/editor/TagPicker";
 import { useKeyDrag, type DragSource } from "@/components/editor/useKeyDrag";
@@ -45,7 +47,7 @@ function reducer(view: ViewState, action: ReducerAction): ViewState {
   return { ...view, history: historyReducer(view.history, action) };
 }
 
-const TYPE_NAMES = { key: "キー", dial: "ダイヤル", scrollpad: "スクロールパッド", trackball: "トラックボール" } as const;
+const TYPE_NAMES = { key: "キー", dial: "ダイヤル", knob: "ダイヤル", scrollpad: "スクロールパッド", trackball: "トラックボール" } as const;
 
 export function LayoutEditor({
   physicalLayout,
@@ -138,6 +140,8 @@ export function LayoutEditor({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // 機種のキーマップのツール(Launcher / Vial)に合わせたキーの一覧(フェーズ8)
+  const paletteCategories = keyPaletteFor(findKeyboard(physicalLayout.id)?.tool ?? "keychron-launcher");
   const currentLayer = state.layers.find((l) => l.layerNumber === state.currentLayer) ?? state.layers[0];
   const pickedElementIds = state.comboPicking === null ? null : (state.combos[state.comboPicking]?.elementIds ?? []);
   // コンボのキーを選び始めたら、タップでの入れ替えはやめる(描画中に自分の状態を直す、React の決まった書き方)
@@ -376,6 +380,7 @@ export function LayoutEditor({
         <LayerTabs layers={state.layers} currentLayer={state.currentLayer} dispatch={dispatch} />
         {state.comboPicking === null && (
           <KeyPalette
+            categories={paletteCategories}
             armedLabel={armedLabel}
             onPointerDownKey={(label, e) => drag.start({ kind: "palette", label }, e)}
             onTapKey={toggleArmed}

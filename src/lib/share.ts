@@ -9,6 +9,7 @@
 /** 機種ごとのハッシュタグ(先頭の#なし)。機種が増えたらここに足す */
 const KEYBOARD_HASHTAGS: Record<string, string[]> = {
   "orca-echo": ["OrcaEcho"],
+  cornix: ["Cornix"],
 };
 const COMMON_HASHTAGS = ["分割キーボード"];
 

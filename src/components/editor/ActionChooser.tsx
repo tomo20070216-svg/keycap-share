@@ -1,6 +1,6 @@
 "use client";
 
-import { ACTION_NAMES } from "@/components/editor/ElementPanel";
+import { actionName } from "@/components/editor/ElementPanel";
 import { ELEMENT_ACTIONS, type Action, type ElementType } from "@/lib/schemas";
 
 /** ダイヤル・トラックボール・スクロールパッドにキーを置くとき、どの操作に入れるかを選ぶ(P5-11) */
@@ -29,7 +29,7 @@ export function ActionChooser({
             onClick={() => onChoose(action)}
             className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-bold text-white hover:bg-zinc-700"
           >
-            {ACTION_NAMES[action]}
+            {actionName(elementType, action)}
           </button>
         ))}
         <button type="button" onClick={onCancel} className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm hover:bg-zinc-100">
