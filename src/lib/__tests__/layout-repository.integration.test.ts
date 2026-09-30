@@ -30,6 +30,7 @@ import { checkSubmissionAllowed, ipHashFor, recordSubmission } from "@/lib/rate-
 import { submitReport } from "@/lib/reports";
 import { STAR_LIMIT_PER_HOUR } from "@/lib/spam-rules";
 import { setStar } from "@/lib/stars";
+import { listCronRuns, recordCronRun } from "@/lib/cron-runs";
 
 const FACTORY_DEFAULT_SLUG = "orca-echo-factory-default";
 
@@ -431,5 +432,58 @@ describe("使われているタグ(Supabase、P7-8)", () => {
     const hiddenOnly = hidden.tags.filter((t) => !listedTags.has(t));
     expect(tags.some((t) => hiddenOnly.includes(t))).toBe(false);
     console.log(`使われているタグ: ${JSON.stringify(tags)} / 一覧に出さない配列だけのタグ: ${JSON.stringify(hiddenOnly)}`);
+  });
+});
+
+describe("定期実行の記録(Supabase、0006適用後。P7-12)", () => {
+  // テストが書き込んだ記録は最後に削除する(人間の許可、2026-09-29)
+  const createdIds: number[] = [];
+  afterAll(async () => {
+    if (createdIds.length > 0) await createServerSupabase().from("cron_runs").delete().in("id", createdIds);
+  });
+
+  it("書き込んだ記録が、ブラウザと同じ権限で新しい順に読める。ブラウザ側の権限では書き込めない", async () => {
+    createdIds.push(await recordCronRun(true));
+    const runs = await listCronRuns(7);
+    expect(runs[0].id).toBe(createdIds[0]);
+    expect(runs[0].ok).toBe(true);
+    expect(Date.now() - Date.parse(runs[0].ranAt)).toBeLessThan(60_000);
+    const { supabase: anon } = await import("@/lib/supabase");
+    const insert = await anon.from("cron_runs").insert({ job: "keepalive", ok: true });
+    expect(insert.error?.code).toBe("42501");
+    console.log(`定期実行の記録: 最新 ${JSON.stringify(runs[0])} / ブラウザ側の権限での書き込み ${insert.error?.code}`);
+  });
+
+  it("/api/keepalive: 合言葉付きの呼び出しで記録が1件増え、合言葉なしは 401 で記録しない", async () => {
+    const { GET } = await import("@/app/api/keepalive/route");
+    const saved = process.env.CRON_SECRET;
+    process.env.CRON_SECRET = `test-secret-${Date.now()}`; // テストの中だけのテスト用の合言葉
+    try {
+      const before = (await listCronRuns(1))[0]?.id ?? 0;
+      const denied = await GET(new Request("http://localhost/api/keepalive"));
+      expect(denied.status).toBe(401);
+      expect((await listCronRuns(1))[0]?.id ?? 0).toBe(before);
+      const res = await GET(new Request("http://localhost/api/keepalive", { headers: { authorization: `Bearer ${process.env.CRON_SECRET}` } }));
+      expect(res.status).toBe(200);
+      const latest = (await listCronRuns(1))[0];
+      expect(latest.id).toBeGreaterThan(before);
+      expect(latest.ok).toBe(true);
+      createdIds.push(latest.id);
+      console.log(`keepalive: 合言葉なし ${denied.status}、合言葉付き ${res.status} ${JSON.stringify(await res.json())} → 記録 ${JSON.stringify(latest)}`);
+    } finally {
+      process.env.CRON_SECRET = saved;
+    }
+  });
+
+  it("30日より古い記録は、次に書き込むときに消える", async () => {
+    const db = createServerSupabase();
+    const old = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await db.from("cron_runs").insert({ job: "keepalive", ok: true, ran_at: old }).select("id").single();
+    expect(error).toBeNull();
+    createdIds.push(data!.id);
+    createdIds.push(await recordCronRun(true));
+    const { data: left } = await db.from("cron_runs").select("id").eq("id", data!.id);
+    expect(left).toEqual([]);
+    console.log(`31日前の記録(id ${data!.id}): 次の書き込みで削除された`);
   });
 });
