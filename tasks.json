@@ -1396,10 +1396,15 @@
       "phase": 8,
       "role": "executor",
       "task": "Cornix の物理レイアウト(src/keyboards/cornix.ts)。有志の Vial 定義(3つで一致)から作る。押し込めるダイヤル(knob: 押す・右回し・左回し)を新しい部品の種類として追加。実物で確認するまでは仮の値",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "左右24キーずつ・ダイヤル左右1つずつ・要素が重ならない・左右対称の単体テストがある",
         "Orca echo の表示が変わらないことを確認している"
+      ],
+      "evidence": [
+        "単体テスト(cornix.test.ts): 左右24キーずつ・ダイヤル左右1つずつ・id の重複なし・要素が重ならない・左右対称",
+        "左右の間隔を自動で広げる処理の前後で Orca echo の6レイヤーの図の大きさ・右手の位置が同じ(evidence/p8/README.md)",
+        "評価役確認: passes 2条件を確認した"
       ],
       "dependencies": [
         "P8-1"
@@ -1410,9 +1415,13 @@
       "phase": 8,
       "role": "executor",
       "task": "Cornix の工場出荷時配列(src/keyboards/cornix-factory-default.ts)。工場出荷時の書き出し(.vil)から、キーの一覧と同じ表示名で書き起こす",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "投稿の検証を通り、通常レイヤー・ダイヤルの割り当てが出典と一致する単体テストがある"
+      ],
+      "evidence": [
+        "単体テスト: 投稿の検証を通る・通常レイヤー(Tab Q W E R T、親指、矢印)とダイヤル(左 音量/ミュート、右 スクロール/中クリック)が出典と一致",
+        "評価役確認: passes 1条件を確認した"
       ],
       "dependencies": [
         "P8-2"
@@ -1423,10 +1432,15 @@
       "phase": 8,
       "role": "executor",
       "task": "機種を選べるようにする: 投稿画面の機種選択(/new → /new?keyboard=)、一覧の機種での絞り込み(?keyboard=)、トップの説明文、機種ごとのハッシュタグ、機種ごとのキーの一覧(Launcher / Vial)",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "機種を選ぶ画面・Cornix の投稿画面(PC・スマホ)・絞り込みの画面での確認結果(スクリーンショット)がある",
         "不正な機種の指定は 404(投稿画面は見つからない表示)"
+      ],
+      "evidence": [
+        "開発サーバーと本番で: 機種を選ぶ画面・Cornix の投稿画面(キーの一覧が Vial)・ダイヤルへの割り当て(押す/右回し/左回し)・機種での絞り込み(evidence/p8/ のスクリーンショット)",
+        "/?keyboard=bogus は 404。/new?keyboard=corne は「This page could not be found」の表示(投稿画面は loading.tsx のため 200。以前からの決まり)",
+        "評価役確認: passes 2条件を確認した"
       ],
       "dependencies": [
         "P8-2"
@@ -1437,10 +1451,16 @@
       "phase": 8,
       "role": "executor",
       "task": "DB: Cornix の機種の登録と、Cornix 工場出荷時配列(一覧に出す)の保存。コードを本番に反映してから一覧に出す(docs/operations.md 6章)",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "結合テストで Cornix の保存・取得・機種での絞り込みを確認したログがある",
         "本番で Cornix の配列ページ・一覧・OGP画像が表示されることの確認結果がある"
+      ],
+      "evidence": [
+        "結合テスト: Cornix 4レイヤー / 割り当て94件、絞り込み Cornix 1件・Orca echo 2件(本番で一覧に戻したあとも成功)",
+        "本番(push 5480fa0..2cefa03 のあと、一覧に出すに戻した): トップ・人気順・?keyboard=cornix・配列ページ・OGP画像がすべて 200、トップに Cornix 工場出荷時配列のカード(evidence/p8/prod-home.png)",
+        "途中で本番の一覧が数分間 500 になった件は応急処置済み、再発防止を docs/operations.md 6章に記載",
+        "評価役確認: passes 2条件を確認した"
       ],
       "dependencies": [
         "P8-3",
