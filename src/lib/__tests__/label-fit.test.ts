@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { estimateTextWidthEm, fitFontSize, fitLabel, fitSingleLine, splitIntoTwoLines } from "@/lib/label-fit";
+import { dropTrailingNote, estimateTextWidthEm, fitFontSize, fitLabel, fitShortLabel, fitSingleLine, splitIntoTwoLines } from "@/lib/label-fit";
 
 describe("estimateTextWidthEm 文字幅の見積もり", () => {
   it("全角は1文字1em、半角は1文字0.62em", () => {
@@ -111,5 +111,46 @@ describe("2行に分ける位置(フェーズ8)", () => {
   });
   it("分けられる位置が単語の中しかないときは、今までどおり真ん中あたりで分ける", () => {
     expect(splitIntoTwoLines("BackSpace")).toEqual(["Back", "Space"]);
+  });
+});
+
+describe("一覧の小さなカードで長い名前が切れない(2026-09-30)", () => {
+  // カードのキー図: キー1つ30px → 文字の幅の上限 約23px、基本の文字サイズ 9px(下限6px)
+  const maxWidth = 30 * 0.9 * 0.86;
+  const base = 30 * 0.3;
+  // 見積もりは多めなので、5%以内のはみ出しは収まっているとみなす(label-fit.ts の NOTE_KEEP_TOLERANCE)
+  const fits = (r: { fontSize: number; lines: string[] }) =>
+    r.lines.every((l) => estimateTextWidthEm(l) * r.fontSize <= maxWidth * 1.05);
+
+  it("末尾のかっこ書きの補足を外す", () => {
+    expect(dropTrailingNote("レイヤー1(押している間)")).toBe("レイヤー1");
+    expect(dropTrailingNote("戻る(マウス)")).toBe("戻る");
+    expect(dropTrailingNote("Opt")).toBe("Opt");
+    expect(dropTrailingNote("(補足だけ)")).toBe("(補足だけ)");
+  });
+
+  it("2行でも収まらない名前は、補足を外して収める(レイヤー1(押している間) → レイヤー1)", () => {
+    const r = fitLabel("レイヤー1(押している間)", maxWidth, base);
+    expect(r.lines.join("")).toBe("レイヤー1");
+    expect(fits(r)).toBe(true);
+  });
+
+  it("補足がなく2行でも収まらない名前は「…」で省略し、幅からはみ出さない", () => {
+    const r = fitLabel("エクスプローラーを開く", maxWidth, base);
+    expect(r.lines.some((l) => l.endsWith("…"))).toBe(true);
+    expect(fits(r)).toBe(true);
+  });
+
+  it("大きなキー図(配列ページ)では、今までどおり補足を含めて表示する", () => {
+    const r = fitLabel("レイヤー1(押している間)", 56 * 0.9 * 0.86, 56 * 0.3);
+    expect(r.lines.join("")).toBe("レイヤー1(押している間)");
+  });
+
+  it("1行だけの場所(スクロールパッドの中など)も、補足を外すか省略して幅に収める", () => {
+    const small = fitShortLabel("↑ 進む(マウス)", 30 * 1.15 * 0.9, 30 * 0.16);
+    expect(small.text).toBe("↑ 進む");
+    expect(estimateTextWidthEm(small.text) * small.fontSize).toBeLessThanOrEqual(30 * 1.15 * 0.9 + 1e-6);
+    const large = fitShortLabel("↑ 進む(マウス)", 56 * 1.15 * 0.9, 56 * 0.16);
+    expect(large.text).toBe("↑ 進む(マウス)");
   });
 });

@@ -40,6 +40,9 @@ export function fitFontSize(
 
 export type FittedLabel = { fontSize: number; lines: string[] };
 
+/** 2行で下限の大きさにしても、この割合を超えてはみ出すときだけ、補足を外したり省略したりする */
+const NOTE_KEEP_TOLERANCE = 1.05;
+
 /**
  * 2行に分ける位置を決める。区切りのよい位置(空白、半角と全角の境目)を優先し、
  * なければ幅がほぼ半分になる位置で分ける。2行のうち長いほうの幅が最小になる位置を選ぶ。
@@ -92,7 +95,37 @@ export function fitLabel(
   }
   const lines = splitIntoTwoLines(text);
   const widest = lines.reduce((a, b) => (estimateTextWidthEm(a) >= estimateTextWidthEm(b) ? a : b));
-  return { fontSize: fitFontSize(widest, maxWidth, baseSize * 0.8), lines };
+  const fontSize = fitFontSize(widest, maxWidth, baseSize * 0.8);
+  // 文字の幅は多めに見積もっているので、わずか(5%以内)に超えるだけなら、そのまま表示する
+  if (estimateTextWidthEm(widest) * fontSize <= maxWidth * NOTE_KEEP_TOLERANCE) return { fontSize, lines };
+
+  // 2行でも下限の大きさで収まらないとき(一覧の小さなカードの「レイヤー1(押している間)」など)は、
+  // まず末尾のかっこ書きの補足を外す。それでも収まらなければ、はみ出す行の末尾を「…」で省略する
+  const shortened = dropTrailingNote(text);
+  if (shortened !== text) return fitLabel(shortened, maxWidth, baseSize, oneLineMinRatio);
+  return { fontSize, lines: lines.map((line) => fitSingleLine(line, maxWidth, fontSize, fontSize).text) };
+}
+
+/**
+ * 末尾のかっこ書きの補足を外す(「レイヤー1(押している間)」→「レイヤー1」、「戻る(マウス)」→「戻る」)。
+ * かっこの前に文字がなければ、そのまま返す。
+ */
+export function dropTrailingNote(text: string): string {
+  const m = text.match(/^(.*\S)\s*[((][^()()]*[))]$/);
+  return m ? m[1] : text;
+}
+
+/**
+ * 1行だけの場所(スクロールパッドの中・ダイヤルやトラックボールの外側の文字)で使う。
+ * 下限の大きさでも収まらなければ、かっこ書きの補足を外し、それでも収まらなければ「…」で省略する。
+ */
+export function fitShortLabel(text: string, maxWidth: number, baseSize: number): { text: string; fontSize: number } {
+  const minSize = Math.max(6, baseSize * 0.4);
+  const fontSize = fitFontSize(text, maxWidth, baseSize, minSize);
+  if (estimateTextWidthEm(text) * fontSize <= maxWidth + 1e-6) return { text, fontSize };
+  const shortened = dropTrailingNote(text);
+  if (shortened !== text) return fitShortLabel(shortened, maxWidth, baseSize);
+  return fitSingleLine(text, maxWidth, baseSize, minSize);
 }
 
 /**

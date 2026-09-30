@@ -5,7 +5,7 @@ import {
   type RenderItem,
   type RenderLabel,
 } from "@/lib/keymap-render";
-import { fitFontSize, fitLabel } from "@/lib/label-fit";
+import { fitFontSize, fitLabel, fitShortLabel } from "@/lib/label-fit";
 import type { Combo, ElementType, KeyboardPhysicalLayout, Layer, Side } from "@/lib/schemas";
 
 /**
@@ -178,7 +178,9 @@ function DeviceLabels({ item, width, height, unit, fontFamily }: { item: RenderI
   // スクロールパッドは縦長なので、中に上から ↑・タップ・↓ の順で置く(割り当てのない位置は空ける)
   const slot = (action: RenderLabel["action"]) => {
     const extra = item.extras.find((e) => e.action === action);
-    const text = extra ? `${ACTION_SYMBOLS[action]} ${extra.text}` : "";
+    // 小さなキー図で収まらないときは、かっこ書きの補足を外すか「…」で省略する
+    const fitted = extra ? fitShortLabel(`${ACTION_SYMBOLS[action]} ${extra.text}`, maxWidth, unit * 0.16) : null;
+    const text = fitted?.text ?? "";
     return (
       <div
         key={action}
@@ -187,7 +189,7 @@ function DeviceLabels({ item, width, height, unit, fontFamily }: { item: RenderI
           height: unit * 0.3,
           alignItems: "center",
           color: COLORS.primaryText,
-          fontSize: text ? fitFontSize(text, maxWidth, unit * 0.16) : 1,
+          fontSize: fitted ? fitted.fontSize : 1,
           fontFamily,
           whiteSpace: "nowrap",
         }}
@@ -221,8 +223,12 @@ function OutsideLabels({ model, unit, fontFamily }: { model: KeymapRenderModel; 
         const height = label.height * unit;
         const isDial = label.action === "cw" || label.action === "ccw";
         // ダイヤルは「右回し」などの説明が長いので、説明を小さく上に、割り当てを下に置く
-        const text = isDial ? label.text : `${ACTION_SYMBOLS[label.action]} ${label.text}`;
-        const fontSize = fitFontSize(text, width, Math.min(height * (isDial ? 0.5 : 0.8), unit * 0.2));
+        const fitted = fitShortLabel(
+          isDial ? label.text : `${ACTION_SYMBOLS[label.action]} ${label.text}`,
+          width,
+          Math.min(height * (isDial ? 0.5 : 0.8), unit * 0.2)
+        );
+        const { text, fontSize } = fitted;
         return (
           <div
             key={`${label.elementId}:${label.action}`}
