@@ -1357,12 +1357,19 @@
       "phase": 7,
       "role": "executor",
       "task": "定期実行(/api/keepalive)が動くたびに日時と成否をDBに記録し(30日より古い記録は消す)、/status に「最後に動いた日時」と最近の記録を表示する。26時間以上動いていなければ「遅れています」。/status はリンクせず noindex。DBの変更(0006)は人間が SQL Editor で適用する",
-      "status": "in_progress",
+      "status": "done",
       "passes": [
         "手元の PostgreSQL で 0006 を確認し、ブラウザ側の権限では書き込めないことのログがある",
         "結合テストで、記録の書き込み・古い記録の削除・読み取りを確認したログがある",
         "/status に最後に動いた日時が出ること、古いと「遅れています」になることの確認結果がある",
         "本番で、Vercel の Cron Jobs の Run(人間が実行)のあと /status に記録が出ることの確認結果がある"
+      ],
+      "evidence": [
+        "手元の PostgreSQL で 0006 を確認(ブラウザ側の権限では書き込み・削除できない)。人間が本番に適用(evidence/p7-status/local-migration.md)",
+        "結合テスト: 記録の書き込み・読み取り・ブラウザ側の書き込みは 42501・keepalive(テスト用の合言葉)で記録が増え合言葉なしは 401・31日前の記録は削除(evidence/p7-status/README.md)",
+        "/status: 記録なし → never、27時間前だけ → late、直近 → ✅ 正常(開発サーバー。status-ok.png)",
+        "本番: push(f578c7f..ba08e59)後は「記録なし」。人間が Vercel の Cron Jobs の Run を押したあと、/status が「2026/09/30 14:13(日本時間) ✅ 正常」、記録2件(成功)",
+        "評価役確認: passes 4条件を確認した"
       ],
       "dependencies": [
         "P6-6"

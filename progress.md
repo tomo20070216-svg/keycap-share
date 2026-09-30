@@ -671,3 +671,7 @@
 - 人間の依頼。定期実行(/api/keepalive)が動くたびに `cron_runs`(0006、人間が本番に適用)に日時と成否を記録し(30日より古い記録は消す)、`/status`(リンクなし・noindex)で「最後に動いた日時」と最近7件を表示。26時間以上動いていなければ「⚠️ 遅れています」。
 - 運用手順 `docs/operations.md` 5章に確認方法を追記。確認結果は `evidence/p7-status/README.md`。
 - push 後、人間に Vercel の Cron Jobs の Run で1回動かしてもらい、本番の /status に記録が出ることを確認する。
+
+## 2026-09-30 — P7-12完了(評価役)
+
+- 人間の承認(push OK)を得て本番に反映(f578c7f..ba08e59)。人間が Vercel の Cron Jobs の Run を押し、本番の /status に「2026/09/30 14:13(日本時間) ✅ 正常」が出ることを確認。評価役として P7-12 を `done` にした。以後、定期実行の確認は /status を見る(docs/operations.md 5章)。

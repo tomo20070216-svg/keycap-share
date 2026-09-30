@@ -20,3 +20,7 @@ keepalive: 合言葉なし 401、合言葉付き 200 {"ok":true,"checkedAt":"202
 ```
 - `status-ok.png`: 2時間前・26時間前の記録を一時的に入れたときの表示(「✅ 正常」、最近の記録2件)。確認後に削除し、記録は0件。
 - 単体テスト(`cron-status.test.ts`: never / ok / failed / 26時間を超えると late / 日本時間の表示)。`npm test` 19ファイル143件、`tsc`・`eslint`・`npm run build` 成功。
+
+## 本番での確認(評価役、push f578c7f..ba08e59 のあと)
+- 反映直後: /status は「記録なし」「まだ一度も動いていません」、robots は noindex, nofollow。/api/keepalive(合言葉なし)は 401。
+- 人間が Vercel の Settings → Cron Jobs で /api/keepalive の Run を押したあと: 「最後に動いた日時: 2026/09/30 14:13(日本時間)」「✅ 正常」、最近の記録 2件(どちらも 14:13 成功。Run が2回動いたと考えられる)。
