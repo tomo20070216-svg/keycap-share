@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildShareText, buildXIntentUrl, shareHashtags } from "@/lib/share";
+import { buildSharePageUrl, buildShareText, buildXIntentUrl, shareHashtags } from "@/lib/share";
 
 describe("共有の文面", () => {
   it("Orca echo は #OrcaEcho #分割キーボード、ほかの機種は #分割キーボード だけ", () => {
@@ -20,5 +20,15 @@ describe("共有の文面", () => {
     expect(intent.origin + intent.pathname).toBe("https://x.com/intent/post");
     expect(intent.searchParams.get("text")).toBe(text);
     expect(intent.searchParams.get("url")).toBe(url);
+  });
+});
+
+describe("X で共有するページのURL(古いカードが出ないように)", () => {
+  it("末尾に配列の版(?v=)を付ける。版が変われば URL も変わる", () => {
+    const a = buildSharePageUrl("https://keycap-share.vercel.app/k/abc123", "1790663815526-2");
+    const b = buildSharePageUrl("https://keycap-share.vercel.app/k/abc123", "1790727870937-2");
+    expect(a).toBe("https://keycap-share.vercel.app/k/abc123?v=1790663815526-2");
+    expect(a).not.toBe(b);
+    expect(buildSharePageUrl("https://keycap-share.vercel.app/k/abc123/1", "1-2")).toBe("https://keycap-share.vercel.app/k/abc123/1?v=1-2");
   });
 });

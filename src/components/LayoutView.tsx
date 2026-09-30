@@ -8,8 +8,8 @@ import { SharePanel } from "@/components/SharePanel";
 import { StarButton } from "@/components/StarButton";
 import { buildKeymapRenderModel } from "@/lib/keymap-render";
 import { formatDateJa } from "@/lib/layout-page-utils";
-import { ogImagePath } from "@/lib/og-image";
-import { buildShareText } from "@/lib/share";
+import { ogImagePath, ogImageVersion } from "@/lib/og-image";
+import { buildSharePageUrl, buildShareText } from "@/lib/share";
 import { getSiteUrl } from "@/lib/site";
 import type { KeyboardPhysicalLayout, Layer, Layout } from "@/lib/schemas";
 
@@ -196,7 +196,8 @@ export function LayoutSharePanel({
   keyboard: KeyboardPhysicalLayout;
   layerNumber?: number;
 }) {
-  const pageUrl = new URL(layoutPath(layout.slug, layerNumber), getSiteUrl()).href;
+  // 配列を更新するたびに変わる ?v= を付け、X に前のカード(古いタイトル・画像)を使わせない
+  const pageUrl = buildSharePageUrl(new URL(layoutPath(layout.slug, layerNumber), getSiteUrl()).href, ogImageVersion(layout));
   return (
     <SharePanel
       initialText={buildShareText({ title: layout.title, keyboardName: keyboard.name, keyboardId: keyboard.id })}

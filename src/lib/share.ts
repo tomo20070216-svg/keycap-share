@@ -22,6 +22,18 @@ export function buildShareText(params: { title: string; keyboardName: string; ke
   return `${params.title} — ${params.keyboardName}の配列を作りました\n${tags}`;
 }
 
+/**
+ * X で共有するときのページのURL。末尾に配列の版(更新日時と画像の見た目の番号。ogImageVersion)を付ける。
+ * X はカード(タイトル・画像)を共有されたURLごとにしばらく保存するため、同じURLのままだと、
+ * タイトルや配列を変えたあとに共有しても前のカードが出てしまう。版が変わればURLも変わるので、新しいカードが読み込まれる。
+ * ページ側は ?v= を読まない(同じ内容を表示し、canonical は ?v= なしのURL)。
+ */
+export function buildSharePageUrl(pageUrl: string, version: string): string {
+  const url = new URL(pageUrl);
+  url.searchParams.set("v", version);
+  return url.href;
+}
+
 /** Xの投稿画面(Web Intent)のURL。文面とURLは投稿画面で編集できる */
 export function buildXIntentUrl(text: string, url: string): string {
   const params = new URLSearchParams({ text, url });
