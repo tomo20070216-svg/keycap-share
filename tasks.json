@@ -1466,6 +1466,57 @@
         "P8-3",
         "P8-4"
       ]
+    },
+    {
+      "id": "P9-1",
+      "phase": 9,
+      "role": "planner",
+      "task": "普段使うキーの不足チェック機能の計画(人間の決定: US配列・60%相当・Fキーなし・矢印キーなし。必須キー一覧と保存時の挙動は docs/requirements.md に記録済み)",
+      "status": "done",
+      "passes": [
+        "計画(必須キー一覧・判定方法・保存時の挙動)を人間に示し、承認を得ている"
+      ],
+      "evidence": [
+        "2026-10-05 人間が必須キー一覧(英字26・数字10・記号12・制御5・修飾3項目)と、保存時は警告のみでブロックしない挙動を承認。docs/requirements.md に記録"
+      ],
+      "dependencies": ["P8-5"]
+    },
+    {
+      "id": "P9-2",
+      "phase": 9,
+      "role": "executor",
+      "task": "src/lib/essential-keys.ts を作成する: 必須キー一覧のデータと、配列(全レイヤー)の割り当てのlabelと照合して不足を返す判定関数",
+      "status": "done",
+      "passes": [
+        "必須キー55項目(英字26・数字10・記号11・制御5・修飾3)が定義されている",
+        "修飾3項目(Shift/Ctrl/Win・Cmd)は、どちらか1つのlabelが配列内にあれば不足にならない単体テストがある",
+        "全部そろっている配列・いくつか欠けている配列の両方で、正しい不足リストが返る単体テストがある"
+      ],
+      "evidence": [
+        "src/lib/essential-keys.ts を作成(ESSENTIAL_KEYS 55項目、findMissingEssentialKeys)",
+        "src/lib/__tests__/essential-keys.test.ts 7件成功: 全部そろっている配列は不足なし / 何もない配列は55件不足 / 一部欠けている配列はその名前だけ不足 / Shift・Ctrl・Win・Cmdはどちらか1つでよい / 別レイヤーの割り当ても数える / 大文字小文字と前後の空白を無視 / CapsLock・Alt・矢印キーは対象外",
+        "評価役確認: passes 3条件を上記のテスト結果で確認した"
+      ],
+      "dependencies": ["P9-1"]
+    },
+    {
+      "id": "P9-3",
+      "phase": 9,
+      "role": "executor",
+      "task": "投稿エディタ(/new)の保存ボタンに、保存前の不足チェックと確認表示を追加する(不足があっても保存はブロックしない)",
+      "status": "done",
+      "passes": [
+        "不足がある状態で保存しようとすると、不足しているキーの一覧を含む確認が表示され、続行すると保存できることの画面での確認結果がある",
+        "不足がない配列では確認が表示されずそのまま保存できることの確認結果がある"
+      ],
+      "evidence": [
+        "src/components/editor/LayoutEditor.tsx の save() に confirmMissingEssentialKeys() を追加。window.confirm で不足キーの一覧を示し、キャンセルすると保存しない、OKならそのまま保存を続ける",
+        "ヘッドレスChromeで確認(evidence/p9/README.md): Orca echo工場出荷時配列(記号・BackSpace・Space未使用)にタイトルだけ付けて保存→不足キー(`、=、[、]、\\、;、'、/、BackSpace、Space)を含む確認が表示された。Qキーの表示名を変えると確認にQが加わり、OKで保存を続けると共有URLが発行された(ブロックしない)",
+        "テスト投稿(slug QJz2RfYKfu0)は is_listed:false で本番DBに作られたことを確認し、人間の承認を得て削除した",
+        "npm test 22ファイル182件、npx tsc --noEmit(next typegen後)、eslint、npm run build いずれも成功",
+        "評価役確認: passes 2条件を確認した"
+      ],
+      "dependencies": ["P9-2"]
     }
   ]
 }

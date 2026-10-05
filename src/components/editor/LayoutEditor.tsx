@@ -17,6 +17,7 @@ import { useKeyDrag, type DragSource } from "@/components/editor/useKeyDrag";
 import { canRedo, canUndo, createHistory, historyReducer, type EditorHistory, type HistoryAction } from "@/lib/editor-history";
 import { canSwapElements, decideTapSwap, toLayoutInput, type EditorState } from "@/lib/editor-state";
 import { removeEditKey, saveEditKey } from "@/lib/edit-keys";
+import { findMissingEssentialKeys } from "@/lib/essential-keys";
 import type { KeyboardPhysicalLayout } from "@/lib/schemas";
 
 /**
@@ -281,8 +282,19 @@ export function LayoutEditor({
     } catch {}
   }
 
+  /** 普段使うキーの不足チェック(フェーズ9)。不足があっても保存はブロックせず、確認してから続けられる */
+  function confirmMissingEssentialKeys(): boolean {
+    const missing = findMissingEssentialKeys(state.layers);
+    if (missing.length === 0) return true;
+    return window.confirm(
+      `次のキーがこの配列のどこにもありません: ${missing.join("、")}\n` +
+        "普段使うキーボードで使う入力が入っているか確認してください。このまま保存しますか?"
+    );
+  }
+
   function save() {
     setErrors([]);
+    if (!confirmMissingEssentialKeys()) return;
     startTransition(async () => {
       if (edit) {
         const result = await updateLayoutAction(edit.slug, edit.secret, toLayoutInput(state));

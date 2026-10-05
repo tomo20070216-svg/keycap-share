@@ -708,3 +708,26 @@
 - 修正(`src/lib/label-fit.ts`): 2行・下限の大きさでも収まらない名前(見積もりで5%を超えてはみ出すもの)は、末尾のかっこ書きの補足を外す(「レイヤー1」「↑ 進む」)。それでも収まらなければ「…」で省略する。1行だけの場所(スクロールパッドの中・ダイヤルやトラックボールの外側の文字)も同じ。大きなキー図(配列ページ・X用の画像)は今までどおり補足を含めて表示する。
 - 確認: 単体テスト(補足を外す・省略しても幅に収まる・大きなキー図では補足を残す)、`npm test` 20ファイル168件、`tsc`・`eslint`・`npm run build` 成功。開発サーバーのトップのカードと Cornix の X用の画像を撮影(`evidence/fix-card-labels-2/`)。
 - (追記)人間の承認(push OK)を得て本番に反映(e56e392..735d8ac)。本番のトップのカードでも、Cornix の親指キーが「レイヤー1」など、スクロールパッドが「↑ 進む」などになり、はみ出さないことを確認(evidence/fix-card-labels-2/prod-home-cards.png)。トップ・Cornix の配列ページ・X用の画像はいずれも 200。
+
+---
+
+## 2026-10-01 — セッション引き継ぎ(計画役)
+
+- 新しいセッションで引き継ぎました。AGENTS.md 4章の手順に従い docs/safety.md / progress.md / tasks.json を確認。
+- `tasks.json` は P0-0〜P8-5 まですべて `status: "done"`。`in_progress` のタスクはなし、依存が満たされた `todo` のタスクもなし(plan.mdのフェーズ0〜8はすべて完了済み)。
+- `git status` はクリーン(作業ツリーに未コミット変更なし)。直近のコミットは `1f2668d`(カードの長い名前の修正を本番で確認)で、progress.mdの最新記録と一致している。
+- 次の作業内容(新しいフェーズの追加や改善要望)は人間からの指示待ち。
+
+---
+
+## 2026-10-05 — フェーズ9: 普段使うキーの不足チェック P9-1〜P9-3(計画役/実行役 → 評価役)
+
+- 人間の要望「普段使っているキーボードで使っているキーをリストアップし、キー配置を考えたあと入っていなければ確認が入るようにしてほしい」。
+- 聞き取りで決定(docs/requirements.mdに記録): 対象はUS配列・60%相当(Fキー・矢印キーなし)。必須キー55項目(英字A〜Z・数字0〜9・記号11個・制御5個Esc/Tab/Enter/BackSpace/Space・修飾3項目Shift/Ctrl/Win・Cmd、どちらか1つでよい)。CapsLock・Alt・矢印キーは対象外。チェックは投稿エディタ(/new)の保存時、警告のみで保存はブロックしない。
+- `src/lib/essential-keys.ts`(ESSENTIAL_KEYS・findMissingEssentialKeys)を作成。判定は配列(全レイヤー)の割り当てのlabelと、大文字小文字・前後の空白を無視して比較する。単体テスト7件。
+- `src/components/editor/LayoutEditor.tsx` の保存処理に `confirmMissingEssentialKeys()` を追加。不足があれば window.confirm で一覧を示し、キャンセルすれば保存しない、OKならそのまま保存する。
+- ヘッドレスChromeで確認: 工場出荷時配列(記号・BackSpace・Space未使用)で確認が出ること、Qキーを変えると確認にQが加わること、OKで保存が続行され共有URLが発行されること(evidence/p9/README.md)。テスト投稿は is_listed:false を確認後、人間の承認を得て削除した。
+- `npm test` 22ファイル182件、`npx tsc --noEmit`(`next typegen` 実行後。`.next` の型が古くエラーが出ていたのを解消)、`eslint`、`npm run build` いずれも成功。評価役として P9-1〜P9-3 を `done` にした。
+- まだ push していない(本番反映は人間の承認を得てから)。
+
+**学び**: `.next` の型生成が古いまま `tsc --noEmit` を実行すると、無関係な変更でも動的ルートの型エラーが大量に出る(以前の学びと同じ現象)。`next typegen` を実行してから型チェックする。また、`window.confirm` を呼ぶボタンのクリックを DevTools Protocol の `Runtime.evaluate` で直接実行すると、ダイアログの応答待ちで `evaluate` 自体がブロックされて固まる。クリックを `setTimeout` で遅らせ、`evaluate` を先に返してから `Page.javascriptDialogOpening` を待つ必要がある。
