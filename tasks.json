@@ -1514,7 +1514,8 @@
         "ヘッドレスChromeで確認(evidence/p9/README.md): Orca echo工場出荷時配列(記号・BackSpace・Space未使用)にタイトルだけ付けて保存→不足キー(`、=、[、]、\\、;、'、/、BackSpace、Space)を含む確認が表示された。Qキーの表示名を変えると確認にQが加わり、OKで保存を続けると共有URLが発行された(ブロックしない)",
         "テスト投稿(slug QJz2RfYKfu0)は is_listed:false で本番DBに作られたことを確認し、人間の承認を得て削除した",
         "npm test 22ファイル182件、npx tsc --noEmit(next typegen後)、eslint、npm run build いずれも成功",
-        "評価役確認: passes 2条件を確認した"
+        "評価役確認: passes 2条件を確認した",
+        "(追記、2026-10-05)人間からの指摘: JIS配列など、1つの物理キーでShiftの有無により2つの記号(例: -と=)が出る構成があり、確認ダイアログの記号がUS配列の基本側(Shiftなし)だけだと伝わらず分かりにくい。confirmMissingEssentialKeys() の文言に「※ ここでの記号は基本側の文字で、Shift併用の記号は別に確認していません」を追加。npm test 21ファイル175件・tsc・eslint・npm run build 成功"
       ],
       "dependencies": ["P9-2"]
     }
