@@ -728,6 +728,6 @@
 - `src/components/editor/LayoutEditor.tsx` の保存処理に `confirmMissingEssentialKeys()` を追加。不足があれば window.confirm で一覧を示し、キャンセルすれば保存しない、OKならそのまま保存する。
 - ヘッドレスChromeで確認: 工場出荷時配列(記号・BackSpace・Space未使用)で確認が出ること、Qキーを変えると確認にQが加わること、OKで保存が続行され共有URLが発行されること(evidence/p9/README.md)。テスト投稿は is_listed:false を確認後、人間の承認を得て削除した。
 - `npm test` 22ファイル182件、`npx tsc --noEmit`(`next typegen` 実行後。`.next` の型が古くエラーが出ていたのを解消)、`eslint`、`npm run build` いずれも成功。評価役として P9-1〜P9-3 を `done` にした。
-- まだ push していない(本番反映は人間の承認を得てから)。
+- 人間の承認(push OK)を得て本番に反映(1f2668d..287f7be)。本番の `/new?keyboard=orca-echo` にタイトルだけ付けて保存しようとすると、確認(「次のキーがこの配列のどこにもありません: …」)が表示されることを確認した(保存はキャンセルし、投稿は作っていない)。
 
 **学び**: `.next` の型生成が古いまま `tsc --noEmit` を実行すると、無関係な変更でも動的ルートの型エラーが大量に出る(以前の学びと同じ現象)。`next typegen` を実行してから型チェックする。また、`window.confirm` を呼ぶボタンのクリックを DevTools Protocol の `Runtime.evaluate` で直接実行すると、ダイアログの応答待ちで `evaluate` 自体がブロックされて固まる。クリックを `setTimeout` で遅らせ、`evaluate` を先に返してから `Page.javascriptDialogOpening` を待つ必要がある。
