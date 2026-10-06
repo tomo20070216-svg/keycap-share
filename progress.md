@@ -753,6 +753,6 @@
   4. `src/components/OwnerEditLink.tsx`: 編集用の鍵がないブラウザで何も表示しない(null)代わりに、「このブラウザには編集用の鍵がありません。投稿者の方は、保存時に表示された編集用URLを開いてください。」というヒントを表示。
 - ヘッドレスChromeで確認(evidence/p10/README.md)。3はCDPの `Input.dispatchMouseEvent` で実際にドラッグし、outlineが allowed=緑solid・not allowed=赤dashed になることを確認した。
 - `npm test` 21ファイル175件、`npx tsc --noEmit`、`eslint`、`npm run build` いずれも成功。
-- まだ push していない(本番反映は人間の承認を得てから)。
+- 人間の承認(push OK)を得て本番に反映(8743b27..8573753)。本番の `/k/orca-echo-factory-default` で編集用の鍵がないブラウザ向けのヒント、`/new?keyboard=orca-echo` のHTMLソースでマクロの注記が表示されることを確認した(要素パネルの強調文・ドラッグ枠は同じコミットのクライアント側コードなので、合わせて反映されている)。
 
 **学び**: ドラッグ中の「置ける/置けない」の区別をCDPで確認するには、`Runtime.evaluate` でクリックするのではなく、`Input.dispatchMouseEvent` で mousePressed→mouseMoved→mouseReleased を実際に送る必要がある(ポインターイベントに依存する処理のため)。
