@@ -740,3 +740,19 @@
 - 人間の承認(push OK)を得て本番に反映(287f7be..07d4365)。本番の `/new?keyboard=orca-echo` で、確認ダイアログに追加した注記(「※ ここでの記号は基本側(Shiftなし)の文字です。キーボードによっては、同じキーをShiftと一緒に押すと別の記号(例: -→_、=→+)になり、それは別に確認していません。」)が表示されることを確認した(保存はキャンセルし、投稿は作っていない)。
 
 **学び**: `.next` の型生成が古いまま `tsc --noEmit` を実行すると、無関係な変更でも動的ルートの型エラーが大量に出る(以前の学びと同じ現象)。`next typegen` を実行してから型チェックする。また、`window.confirm` を呼ぶボタンのクリックを DevTools Protocol の `Runtime.evaluate` で直接実行すると、ダイアログの応答待ちで `evaluate` 自体がブロックされて固まる。クリックを `setTimeout` で遅らせ、`evaluate` を先に返してから `Page.javascriptDialogOpening` を待つ必要がある。
+
+---
+
+## 2026-10-06 — P10-1: 分かりにくい点の調査と改善1〜4(実行役)
+
+- 人間からの依頼「他にも分かりにくいところがあれば教えてください」。コード・文言を一通り読み、7件を見つけて優先度付きで報告した: (1)マクロがキー図に自動反映されると誤解しやすい (2)「ほかのキーと入れ替える」がレイヤー限定なことの強調不足 (3)ドラッグ中の枠が色だけの区別 (4)編集リンクが無言で消える (5)パレット配置とキー図内入れ替えの説明が離れている (6)タグの「おすすめ」と「候補」の見た目が同じ (7)⭐️の「自分の配列には付けられない」制限がブラウザ単位であることの説明がない。
+- 人間の指示で1〜4を実装。
+  1. `src/components/editor/ComboMacroEditor.tsx`: マクロの説明に「ここで追加しても、キー図には自動で反映されません」の注記を追加。
+  2. `src/components/editor/ElementPanel.tsx`: 「ほかのキーと入れ替える」の説明に、今見ているレイヤー名を太字で入れた強調文を追加。
+  3. `src/components/editor/EditableKeymap.tsx`: ドラッグ中の枠を、置ける(緑)は実線、置けない(赤)は点線にして、色だけでなく線の形でも区別できるようにした。
+  4. `src/components/OwnerEditLink.tsx`: 編集用の鍵がないブラウザで何も表示しない(null)代わりに、「このブラウザには編集用の鍵がありません。投稿者の方は、保存時に表示された編集用URLを開いてください。」というヒントを表示。
+- ヘッドレスChromeで確認(evidence/p10/README.md)。3はCDPの `Input.dispatchMouseEvent` で実際にドラッグし、outlineが allowed=緑solid・not allowed=赤dashed になることを確認した。
+- `npm test` 21ファイル175件、`npx tsc --noEmit`、`eslint`、`npm run build` いずれも成功。
+- まだ push していない(本番反映は人間の承認を得てから)。
+
+**学び**: ドラッグ中の「置ける/置けない」の区別をCDPで確認するには、`Runtime.evaluate` でクリックするのではなく、`Input.dispatchMouseEvent` で mousePressed→mouseMoved→mouseReleased を実際に送る必要がある(ポインターイベントに依存する処理のため)。

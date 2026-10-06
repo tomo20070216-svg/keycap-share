@@ -1518,6 +1518,26 @@
         "(追記、2026-10-05)人間からの指摘: JIS配列など、1つの物理キーでShiftの有無により2つの記号(例: -と=)が出る構成があり、確認ダイアログの記号がUS配列の基本側(Shiftなし)だけだと伝わらず分かりにくい。confirmMissingEssentialKeys() の文言に「※ ここでの記号は基本側の文字で、Shift併用の記号は別に確認していません」を追加。npm test 21ファイル175件・tsc・eslint・npm run build 成功"
       ],
       "dependencies": ["P9-2"]
+    },
+    {
+      "id": "P10-1",
+      "phase": 10,
+      "role": "executor",
+      "task": "分かりにくい点の調査(人間の依頼)。見つかった7件のうち優先度の高い4件(マクロの自動反映誤解・入れ替えのレイヤー限定の強調不足・ドラッグ枠が色だけの区別・編集リンクが無言で消える)を改善する",
+      "status": "done",
+      "passes": [
+        "4件それぞれについて、画面での確認結果(テキストまたは見た目の変化)がある"
+      ],
+      "evidence": [
+        "1: src/components/editor/ComboMacroEditor.tsx のマクロの説明に「※ ここで追加しても、キー図には自動で反映されません。…表示名にこのマクロと同じ名前を自分で入力してください。」を追加",
+        "2: src/components/editor/ElementPanel.tsx の「ほかのキーと入れ替える」の説明に「今見ている『◯◯』だけに効きます。ほかのレイヤーも入れ替えたい場合は、レイヤーを切り替えてから同じ操作をもう一度行ってください。」を追加(レイヤー名を太字で強調)",
+        "3: src/components/editor/EditableKeymap.tsx のドラッグ中の枠を、allowed=緑の実線、not allowed=赤の点線に変更(色だけでなく線の形でも区別できるように)",
+        "4: src/components/OwnerEditLink.tsx で、編集用の鍵がないブラウザでは何も表示しない(null)代わりに「このブラウザには編集用の鍵がありません。投稿者の方は、保存時に表示された編集用URLを開いてください。」というヒントを表示",
+        "ヘッドレスChromeで確認(evidence/p10/README.md): マクロの注記表示 / 要素パネルの強調文表示 / ドラッグでoutlineがallowed=緑solid・blocked=赤dashedになること(Input.dispatchMouseEventで実際にドラッグ) / 編集用の鍵がないブラウザで「編集する」ボタンの代わりにヒントが出ること",
+        "npm test 21ファイル175件、npx tsc --noEmit、eslint、npm run build いずれも成功",
+        "評価役確認: passesの条件を上記の確認結果で確認した"
+      ],
+      "dependencies": ["P9-3"]
     }
   ]
 }

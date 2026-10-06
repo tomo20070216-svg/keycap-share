@@ -115,8 +115,9 @@ function EditableKeymapSide({
                 height: b.height,
                 transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined,
                 borderRadius: item.type === "trackball" || item.type === "scrollpad" ? Math.min(b.width, b.height) / 2 : 8,
+                // 色だけでなく実線/点線でも区別する(色の区別がつきにくい場合でも分かるように)
                 outline: dropHere
-                  ? `4px solid ${dropHere.allowed ? "#16a34a" : "#dc2626"}`
+                  ? `4px ${dropHere.allowed ? "solid" : "dashed"} ${dropHere.allowed ? "#16a34a" : "#dc2626"}`
                   : swapSource
                     ? "4px dashed #7c3aed"
                     : selected

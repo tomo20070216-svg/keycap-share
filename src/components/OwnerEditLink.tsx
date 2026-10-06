@@ -14,7 +14,15 @@ export function OwnerEditLink({ slug }: { slug: string }) {
     () => getEditKey(slug) !== null,
     () => false
   );
-  if (!hasKey) return null;
+  if (!hasKey) {
+    // このブラウザに鍵がないだけで、ボタンを消すとなぜ編集できないか伝わらない。
+    // 投稿者が別の端末・ブラウザで開いた場合に気づけるよう、ヒントを残す
+    return (
+      <span data-testid="owner-edit-hint" className="text-xs text-zinc-500">
+        このブラウザには編集用の鍵がありません。投稿者の方は、保存時に表示された編集用URLを開いてください。
+      </span>
+    );
+  }
   return (
     <Link
       href={`/k/${slug}/edit`}

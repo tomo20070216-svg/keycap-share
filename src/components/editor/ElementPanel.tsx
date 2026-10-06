@@ -61,7 +61,10 @@ export function ElementPanel({
           >
             {`ほかの${typeName}と入れ替える`}
           </button>
-          <span className="text-xs text-zinc-600">左手・右手をまたいで、このレイヤーの割り当てをまるごと入れ替えます。</span>
+          <span className="text-xs text-zinc-600">
+            左手・右手をまたいで割り当てを入れ替えます。<strong className="font-bold text-zinc-800">今見ている「{layer.layerName}」だけに効きます。</strong>
+            ほかのレイヤーも入れ替えたい場合は、レイヤーを切り替えてから同じ操作をもう一度行ってください。
+          </span>
         </div>
       )}
       <p className="text-xs text-zinc-600">

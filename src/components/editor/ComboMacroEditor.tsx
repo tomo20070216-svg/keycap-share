@@ -133,6 +133,8 @@ export function MacroEditor({ macros, dispatch }: { macros: Macro[]; dispatch: (
       </div>
       <p className="text-xs text-zinc-500">
         一連のキー操作を1つのキーに登録する設定です。キーの表示名にマクロの名前を入れ、ここで中身を説明してください。
+        <br />
+        ※ ここで追加しても、キー図には自動で反映されません。マクロを割り当てたいキーをクリックして、表示名にこのマクロと同じ名前を自分で入力してください。
       </p>
       {macros.map((macro, index) => (
         <div key={index} className="flex flex-col gap-2 rounded-lg border border-zinc-200 p-3 sm:flex-row sm:items-end">
